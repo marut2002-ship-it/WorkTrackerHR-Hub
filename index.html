@@ -1,320 +1,207 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="th">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cyber Glass - Neural Interface Design</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <link href="templatemo-neural-style.css" rel="stylesheet">
-<!--
-
-TemplateMo 597 Neural Glass
-
-https://templatemo.com/tm-597-neural-glass
-
--->
+    <title>Employee Work Tracker</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script>
+        tailwind.config = { theme: { extend: { colors: { primary: '#3B82F6', secondary: '#10B981', accent: '#F3F4F6' } } } }
+    </script>
     <style>
-       
+        .fade-in { animation: fadeIn 0.3s ease-in; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .loading { animation: spin 1s linear infinite; }
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        .modal { display: none; }
+        .modal.is-active { display: flex; }
     </style>
 </head>
-<body>
-    <!-- Epic Neural Background -->
-    <div class="neural-background"></div>
-    
-    <!-- Floating Geometric Shapes -->
-    <div class="geometric-shapes">
-        <div class="shape"></div>
-        <div class="shape"></div>
-        <div class="shape"></div>
-        <div class="shape"></div>
+<body class="bg-gray-50 font-sans">
+    <!-- Login Page -->
+    <div id="loginPage" class="min-h-screen flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-xl p-8 w-full max-w-md fade-in">
+             <div class="text-center mb-8">
+                <div class="w-16 h-16 bg-gradient-to-r from-primary to-secondary rounded-full mx-auto mb-4 flex items-center justify-center"><svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg></div>
+                <h1 class="text-2xl font-bold text-gray-800">Work Tracker</h1>
+                <p class="text-gray-600 mt-2">เข้าสู่ระบบเพื่อจัดการงานของคุณ</p>
+            </div>
+            <form id="loginForm" class="space-y-6">
+                <div><label class="block text-sm font-medium text-gray-700 mb-2">Username</label><input type="text" id="username" class="w-full px-4 py-3 border border-gray-300 rounded-xl" required></div>
+                <div class="relative"><label class="block text-sm font-medium text-gray-700 mb-2">Password</label><input type="password" id="password" class="w-full px-4 py-3 border border-gray-300 rounded-xl" required><button type="button" id="togglePassword" class="absolute inset-y-0 right-0 top-7 pr-3 flex items-center text-gray-500"><i class="fas fa-eye"></i></button></div>
+                <button type="submit" id="loginBtn" class="w-full bg-gradient-to-r from-primary to-secondary text-white py-3 rounded-xl font-medium flex items-center justify-center"><span id="loginText">เข้าสู่ระบบ</span><div id="loginSpinner" class="loading w-5 h-5 border-2 border-white border-t-transparent rounded-full ml-2 hidden"></div></button>
+            </form>
+            <div id="loginError" class="mt-4 p-3 bg-red-100 text-red-700 rounded-xl hidden"></div>
+        </div>
     </div>
 
-    <!-- Neural Network Lines -->
-    <div class="neural-lines">
-        <div class="neural-line"></div>
-        <div class="neural-line"></div>
-        <div class="neural-line"></div>
-    </div>
-
-    <!-- Header -->
-    <header class="glass">
-        <nav>
-            <a href="#home" class="logo">
-                <svg class="logo-icon" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-                    <defs>
-                        <linearGradient id="logoGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                            <stop offset="0%" style="stop-color:#e0a3ff"/>
-                            <stop offset="50%" style="stop-color:#ff69b4"/>
-                            <stop offset="100%" style="stop-color:#9370db"/>
-                        </linearGradient>
-                    </defs>
-                    <circle cx="50" cy="30" r="8" fill="url(#logoGradient)" opacity="0.8">
-                        <animate attributeName="opacity" values="0.8;1;0.8" dur="2s" repeatCount="indefinite"/>
-                    </circle>
-                    <circle cx="30" cy="60" r="6" fill="url(#logoGradient)" opacity="0.6">
-                        <animate attributeName="opacity" values="0.6;1;0.6" dur="2.5s" repeatCount="indefinite"/>
-                    </circle>
-                    <circle cx="70" cy="65" r="7" fill="url(#logoGradient)" opacity="0.7">
-                        <animate attributeName="opacity" values="0.7;1;0.7" dur="1.8s" repeatCount="indefinite"/>
-                    </circle>
-                    <line x1="50" y1="30" x2="30" y2="60" stroke="url(#logoGradient)" stroke-width="2" opacity="0.6">
-                        <animate attributeName="opacity" values="0.6;1;0.6" dur="3s" repeatCount="indefinite"/>
-                    </line>
-                    <line x1="50" y1="30" x2="70" y2="65" stroke="url(#logoGradient)" stroke-width="2" opacity="0.6">
-                        <animate attributeName="opacity" values="0.6;1;0.6" dur="2.2s" repeatCount="indefinite"/>
-                    </line>
-                    <line x1="30" y1="60" x2="70" y2="65" stroke="url(#logoGradient)" stroke-width="2" opacity="0.6">
-                        <animate attributeName="opacity" values="0.6;1;0.6" dur="2.8s" repeatCount="indefinite"/>
-                    </line>
-                </svg>
-                NEURALGLASS
-            </a>
-            <ul class="nav-links">
-                <li><a href="#features">Neural</a></li>
-                <li><a href="#showcase">Matrix</a></li>
-                <li><a href="#timeline">Evolution</a></li>
-                <li><a href="#contact">Connect</a></li>
-                <li><a href="https://example.com" target="_blank" class="external-link">External</a></li>
-</ul>
-            </ul>
-            <div class="mobile-menu-toggle">
-                <div class="hamburger-line"></div>
-                <div class="hamburger-line"></div>
-                <div class="hamburger-line"></div>
+    <!-- Main App -->
+    <div id="mainApp" class="hidden">
+        <nav class="bg-white shadow-sm border-b">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex justify-between items-center h-16">
+                    <div class="flex items-center space-x-8">
+                        <div class="flex items-center"><div class="w-8 h-8 bg-gradient-to-r from-primary to-secondary rounded-lg flex items-center justify-center"><svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg></div><span class="ml-2 text-xl font-bold text-gray-800">Work Tracker</span></div>
+                        <div id="main-nav-links" class="hidden md:flex space-x-6">
+                            <button onclick="showPage('dashboard', this)" class="nav-btn text-gray-700 px-3 py-2 rounded-lg">ภาพรวม</button>
+                            <button onclick="showPage('calendar', this)" class="nav-btn text-gray-700 px-3 py-2 rounded-lg">ปฏิทิน</button>
+                            <button onclick="showPage('scheduleForm', this)" class="nav-btn text-gray-700 px-3 py-2 rounded-lg">ลงเวลาปฏิบัติงาน</button>
+                            <button id="activity-log-nav" onclick="showPage('activity', this)" class="nav-btn text-gray-700 px-3 py-2 rounded-lg">Activity Log</button>
+                        </div>
+                    </div>
+                    <div class="flex items-center space-x-4">
+                        <div class="text-right"><div class="text-sm font-medium text-gray-800" id="userDisplay"></div><div class="text-xs text-gray-500" id="roleDisplay"></div></div>
+                        <button onclick="logout()" class="text-gray-500 hover:text-red-500 p-2 rounded-lg"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg></button>
+                    </div>
+                </div>
             </div>
         </nav>
-        <div class="mobile-nav">
-            <a href="#features">Neural</a>
-            <a href="#showcase">Matrix</a>
-            <a href="#timeline">Evolution</a>
-            <a href="#contact">Connect</a>
-            <a href="https://example.com" target="_blank" class="external-link">External</a>
-        </div>
-    </header>
+        
+        <main>
+            <div id="dashboardPage" class="page-content max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8"></div>
+            <div id="calendarPage" class="page-content max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 hidden"></div>
+            <div id="scheduleFormPage" class="page-content max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 hidden"></div>
+            <div id="activityPage" class="page-content max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 hidden"></div>
+        </main>
+        
+        <div id="eventModal" class="modal fixed inset-0 bg-black bg-opacity-50 items-center justify-center p-4 z-50"><div class="bg-white rounded-lg p-6 w-full max-w-lg fade-in"><div class="flex justify-between items-center mb-4"><h3 id="modalDate" class="text-xl font-bold"></h3><button id="closeModalBtn" class="text-gray-500 hover:text-black text-2xl">&times;</button></div><div id="modalContent" class="space-y-3 max-h-96 overflow-y-auto"></div></div></div>
+        <div id="editModal" class="modal fixed inset-0 bg-black bg-opacity-50 items-center justify-center p-4 z-50"><div class="bg-white rounded-lg p-6 w-full max-w-4xl fade-in"><div class="flex justify-between items-center mb-4"><h3 class="text-xl font-bold">แก้ไขตารางงาน</h3><button id="closeEditModalBtn" class="text-gray-500 hover:text-black text-2xl">&times;</button></div><form id="editScheduleForm" class="space-y-6"></form></div></div>
+    </div>
+    
+    <script>
+    // ============== JAVASCRIPT LOGIC (SEPARATE FILE VERSION) ==============
+    
+    const SCRIPT_URL = 'https://script.google.com/a/macros/srisawadpower.com/s/AKfycbxJMnrUrE7ND9PjPl3qIw7_phwESmBjvq-8pyR0CB2sz2HzMKPUrCmxJjn2uEJLhD_q/exec';
+    let currentUser = null;
+    const branchInfoMap = new Map();
+    let calendarEvents = [];
+    let calendarCurrentDate = new Date();
+    let dashboardMasterData = [];
 
-    <!-- Section 1: Hero -->
-    <section class="hero" id="home">
-        <div class="hero-content">
-            <div class="hero-subtitle">Welcome to the Future</div>
-            <h1>NEURAL INTERFACE</h1>
-            
-            <div class="hero-description">
-                <p>Experience the convergence of consciousness and technology through quantum-enhanced glassmorphism interfaces. Step into a reality where digital dreams become tangible experiences, transcending the boundaries between mind and machine.</p>
-            </div>
+    document.addEventListener('DOMContentLoaded', () => {
+        document.getElementById('loginForm').addEventListener('submit', handleLogin);
+        document.getElementById('togglePassword').addEventListener('click', togglePasswordVisibility);
+        checkSession();
+    });
 
-            <div class="hero-stats">
-                <div class="hero-stat">
-                    <span class="hero-stat-number">99.9%</span>
-                    <span class="hero-stat-label">Neural Sync Rate</span>
-                </div>
-                <div class="hero-stat">
-                    <span class="hero-stat-number">∞</span>
-                    <span class="hero-stat-label">Processing Power</span>
-                </div>
-                <div class="hero-stat">
-                    <span class="hero-stat-number">0.001</span>
-                    <span class="hero-stat-label">Latency (ms)</span>
-                </div>
-                <div class="hero-stat">
-                    <span class="hero-stat-number">24/7</span>
-                    <span class="hero-stat-label">Neural Access</span>
-                </div>
-            </div>
-            
-            <div class="cta-buttons">
-                <a href="#features" class="cta-button">Initialize Neural Link</a>
-                <a href="#showcase" class="cta-button secondary">Explore Matrix</a>
-            </div>
-        </div>
-    </section>
+    // API function using JSONP
+    function apiGet(params) {
+        return new Promise((resolve, reject) => {
+            const url = new URL(SCRIPT_URL);
+            if (currentUser) {
+                params.username = currentUser.username;
+                params.role = currentUser.role;
+            }
+            const script = document.createElement('script');
+            const callbackName = 'jsonp_callback_' + Math.round(100000 * Math.random());
+            url.searchParams.append('callback', callbackName);
+            Object.keys(params).forEach(key => {
+                if(params[key] !== null) url.searchParams.append(key, params[key]);
+            });
+            window[callbackName] = (data) => {
+                delete window[callbackName];
+                document.body.removeChild(script);
+                resolve(data);
+            };
+            script.src = url;
+            script.onerror = (err) => {
+                delete window[callbackName];
+                document.body.removeChild(script);
+                console.error('JSONP Error:', err);
+                reject(new Error('Failed to fetch data. Check network and SCRIPT_URL.'));
+            };
+            document.body.appendChild(script);
+        });
+    }
 
-    <!-- Section 2: Diagonal Features -->
-    <section class="features" id="features">
-        <div class="features-container">
-            <h2 class="section-title">QUANTUM CAPABILITIES</h2>
-            <div class="diagonal-grid">
-                <div class="feature-row">
-                    <div class="feature-content glass">
-                        <div class="feature-icon">🧠</div>
-                        <h3>Neural Processing</h3>
-                        <p>Advanced AI-driven interfaces that adapt to your consciousness patterns, creating personalized digital experiences that evolve with your neural pathways.</p>
-                    </div>
-                    <div class="feature-visual glass"></div>
-                </div>
-                
-                <div class="feature-row">
-                    <div class="feature-content glass">
-                        <div class="feature-icon">⚡</div>
-                        <h3>Quantum Speed</h3>
-                        <p>Instantaneous data processing through quantum tunneling algorithms, delivering response times that exist outside conventional spacetime constraints.</p>
-                    </div>
-                    <div class="feature-visual glass"></div>
-                </div>
-                
-                <div class="feature-row">
-                    <div class="feature-content glass">
-                        <div class="feature-icon">🌐</div>
-                        <h3>Dimensional Sync</h3>
-                        <p>Seamless synchronization across multiple reality layers, ensuring your digital presence remains consistent throughout parallel dimensions.</p>
-                    </div>
-                    <div class="feature-visual glass"></div>
-                </div>
-            </div>
-        </div>
-    </section>
+    function checkSession() {
+        const user = sessionStorage.getItem('currentUser');
+        if (user) {
+            currentUser = JSON.parse(user);
+            initializeApp();
+        }
+    }
 
-    <!-- Section 3: Hexagonal Showcase -->
-    <section class="showcase" id="showcase">
-        <h2 class="section-title">MATRIX PROTOCOLS</h2>
-        <div class="hexagon-container">
-            <div class="hexagon">
-                <div class="hexagon-inner glass">
-                    <div class="hexagon-icon">🔮</div>
-                    <h4>Holographic UI</h4>
-                    <p>3D interfaces projected into reality space</p>
-                </div>
-            </div>
-            <div class="hexagon">
-                <div class="hexagon-inner glass">
-                    <div class="hexagon-icon">🛡️</div>
-                    <h4>Quantum Security</h4>
-                    <p>Unbreakable encryption protocols</p>
-                </div>
-            </div>
-            <div class="hexagon">
-                <div class="hexagon-inner glass">
-                    <div class="hexagon-icon">🚀</div>
-                    <h4>Warp Navigation</h4>
-                    <p>Instant travel between data nodes</p>
-                </div>
-            </div>
-            <div class="hexagon">
-                <div class="hexagon-inner glass">
-                    <div class="hexagon-icon">💎</div>
-                    <h4>Crystal Storage</h4>
-                    <p>Infinite capacity data crystals</p>
-                </div>
-            </div>
-            <div class="hexagon">
-                <div class="hexagon-inner glass">
-                    <div class="hexagon-icon">🎯</div>
-                    <h4>Neural Targeting</h4>
-                    <p>Thought-based interaction systems</p>
-                </div>
-            </div>
-            <div class="hexagon">
-                <div class="hexagon-inner glass">
-                    <div class="hexagon-icon">⭐</div>
-                    <h4>Stellar Network</h4>
-                    <p>Galactic-scale connectivity matrix</p>
-                </div>
-            </div>
-        </div>
-    </section>
+    async function handleLogin(e) {
+        e.preventDefault();
+        const loginBtn = document.getElementById('loginBtn');
+        const loginText = document.getElementById('loginText');
+        const loginSpinner = document.getElementById('loginSpinner');
+        const loginError = document.getElementById('loginError');
+        loginText.textContent = 'กำลังเข้าสู่ระบบ...';
+        loginSpinner.classList.remove('hidden');
+        loginBtn.disabled = true;
+        loginError.classList.add('hidden');
+        try {
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const response = await apiGet({ action: 'login', username, password });
+            if (response.status === 'success') {
+                currentUser = response.user;
+                sessionStorage.setItem('currentUser', JSON.stringify(currentUser));
+                initializeApp();
+            } else { throw new Error(response.message || 'Login failed'); }
+        } catch (error) {
+            loginError.textContent = 'ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง หรือเกิดข้อผิดพลาด';
+            loginError.classList.remove('hidden');
+        } finally {
+            loginText.textContent = 'เข้าสู่ระบบ';
+            loginSpinner.classList.add('hidden');
+            loginBtn.disabled = false;
+        }
+    }
 
-    <!-- Section 4: Timeline -->
-    <section class="timeline" id="timeline">
-        <h2 class="section-title">EVOLUTION TIMELINE</h2>
-        <div class="timeline-container">
-            <div class="timeline-line"></div>
-            
-            <div class="timeline-item">
-                <div class="timeline-content glass">
-                    <div class="timeline-year">2024</div>
-                    <h4>Genesis Protocol</h4>
-                    <p>NeuralGlass is a cutting-edge cyberpunk glassmorphism HTML template featuring a striking purple, pink, and green color palette with futuristic neural network aesthetics.</p>
-                </div>
-                <div class="timeline-dot"></div>
-            </div>
-            
-            <div class="timeline-item">
-                <div class="timeline-content glass">
-                    <div class="timeline-year">2025</div>
-                    <h4>Matrix Integration</h4>
-                    <p>Built with pure HTML/CSS and vanilla JavaScript, it offers smooth scrolling, mobile-responsive navigation with hamburger menu, parallax effects, and dynamic visual elements that respond to user interaction.</p>
-                </div>
-                <div class="timeline-dot"></div>
-            </div>
-            
-            <div class="timeline-item">
-                <div class="timeline-content glass">
-                    <div class="timeline-year">2026</div>
-                    <h4>Quantum Leap</h4>
-                    <p>This HTML CSS template is brought to you by TemplateMo website. Perfect for tech startups, AI companies, gaming platforms, or any project requiring a bold, futuristic web presence.</p>
-                </div>
-                <div class="timeline-dot"></div>
-            </div>
-            
-            <div class="timeline-item">
-                <div class="timeline-content glass">
-                    <div class="timeline-year">2027</div>
-                    <h4>Neural Singularity</h4>
-                    <p>Human consciousness successfully merges with AI systems, creating hybrid intelligences that transcend biological limitations.</p>
-                </div>
-                <div class="timeline-dot"></div>
-            </div>
-        </div>
-    </section>
+    function initializeApp() {
+        document.getElementById('userDisplay').textContent = currentUser.fullName;
+        const roleDisplay = document.getElementById('roleDisplay');
+        if (currentUser.role.toLowerCase() === 'employee') {
+            roleDisplay.textContent = 'วิทยากรประจำพื้นที่';
+            if(document.getElementById('activity-log-nav')) { document.getElementById('activity-log-nav').style.display = 'none'; }
+        } else {
+            roleDisplay.textContent = currentUser.role;
+        }
+        document.getElementById('loginPage').classList.add('hidden');
+        document.getElementById('mainApp').classList.remove('hidden');
+        fetchBranchData().then(() => {
+            showPage('dashboard', document.querySelector('.nav-btn'));
+        });
+    }
 
-    <!-- Section 5: Contact -->
-    <section class="contact" id="contact">
-        <div class="contact-container">
-            <div class="contact-info glass">
-                <h3>ESTABLISH CONNECTION</h3>
-                <p>Ready to interface with the future? Our neural network specialists are standing by to guide you through the quantum realm of possibilities.</p>
-                <p>Connect through the dimensional gateway and let us initialize your journey into the digital consciousness matrix.</p>
-                
-                <div class="social-links">
-                    <a href="#" class="glass">📡</a>
-                    <a href="#" class="glass">🌐</a>
-                    <a href="#" class="glass">💬</a>
-                    <a href="#" class="glass">📨</a>
-                </div>
-            </div>
-            
-            <div class="contact-form glass">
-                <div class="form-group">
-                    <input type="text" placeholder="Neural ID (Name)" required>
-                </div>
-                <div class="form-group">
-                    <input type="email" placeholder="Quantum Channel (Email)" required>
-                </div>
-                <div class="form-group">
-                    <input type="text" placeholder="Mission Objective (Subject)" required>
-                </div>
-                <div class="form-group">
-                    <textarea rows="5" placeholder="Transmission Data (Message)" required></textarea>
-                </div>
-                <button type="submit" class="submit-btn">TRANSMIT TO MATRIX</button>
-            </div>
-        </div>
-    </section>
-
-    <!-- Footer -->
-    <footer>
-        <div class="footer-content">
-            <div class="footer-links">
-                <a href="#features">Neural Networks</a>
-                <a href="#showcase">Matrix Protocols</a>
-                <a href="#timeline">Evolution</a>
-                <a href="#">Privacy Policy</a>
-                <a href="#">Terms of Service</a>
-                <a href="#">Documentation</a>
-                <!-- Add external links -->
-    			<a href="https://github.com/yourproject" target="_blank" rel="noopener">GitHub</a>
-            </div>
-            <div class="footer-copyright">
-                <p>&copy; 2025 NeuralGlass Interface. All quantum rights reserved across dimensions.</p>
-            </div>
-            <div class="footer-design">
-                Design: <a href="https://templatemo.com" target="_blank" rel="nofollow noopener">TemplateMo</a> | 
-                Enhanced by Neural AI Systems | 
-                <a href="#">Quantum Framework</a>
-            </div>
-        </div>
-    </footer>
-<script src="templatemo-neural-scripts.js"></script>
+    function logout() {
+        if (confirm('คุณต้องการออกจากระบบหรือไม่?')) {
+            sessionStorage.removeItem('currentUser');
+            location.reload();
+        }
+    }
+    
+    function togglePasswordVisibility(){const passwordInput=document.getElementById('password');const icon=this.querySelector('i');const type=passwordInput.getAttribute('type')==='password'?'text':'password';passwordInput.setAttribute('type',type);icon.classList.toggle('fa-eye');icon.classList.toggle('fa-eye-slash')}
+    function getPageHTML(pageId){const templates={dashboard:`<div class="fade-in"><h1 class="text-3xl font-bold text-gray-800 mb-6">ภาพรวมการลงเวลา</h1><div class="bg-white p-4 rounded-lg shadow-sm border mb-6 grid grid-cols-1 md:grid-cols-5 gap-4 items-end"><div><label class="text-sm font-medium">เดือน</label><input type="month" id="filter-month" class="w-full mt-1 p-2 border rounded-md"></div><div id="user-filter-container" class="hidden"><label class="text-sm font-medium">รายชื่อ HUB</label><select id="filter-hub" class="w-full mt-1 p-2 border rounded-md filter-dropdown"><option value="">ทั้งหมด</option></select></div><div><label class="text-sm font-medium">เขต</label><select id="filter-area" class="w-full mt-1 p-2 border rounded-md filter-dropdown"><option value="">ทั้งหมด</option></select></div><div><label class="text-sm font-medium">ภาค</label><select id="filter-region" class="w-full mt-1 p-2 border rounded-md filter-dropdown"><option value="">ทั้งหมด</option></select></div><button id="apply-filters" class="w-full bg-primary text-white p-2 rounded-md hover:bg-blue-600">กรองข้อมูล</button></div><div id="stats-cards" class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6"></div><div class="bg-white rounded-lg shadow-sm border overflow-hidden"><div class="p-4 border-b flex justify-between items-center"><h2 class="text-xl font-bold">ตารางงาน</h2><button id="refresh-table" class="text-primary hover:text-blue-600"><i class="fas fa-sync-alt mr-2"></i>รีเฟรช</button></div><div class="overflow-x-auto"><table class="w-full"><thead class="bg-gray-50"><tr><th class="p-3 text-left text-xs font-medium uppercase">วันที่</th><th class="p-3 text-left text-xs font-medium uppercase">พนักงาน</th><th class="p-3 text-left text-xs font-medium uppercase">สาขา</th><th class="p-3 text-left text-xs font-medium uppercase">เขต</th><th class="p-3 text-left text-xs font-medium uppercase">ภาค</th><th class="p-3 text-left text-xs font-medium uppercase">จัดการ</th></tr></thead><tbody id="dashboard-table-body" class="divide-y divide-gray-200"></tbody></table></div></div></div>`,calendar:`<div class="fade-in"><div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8"><h1 class="text-3xl font-bold text-gray-800 mb-4 sm:mb-0">ปฏิทินงาน</h1><div class="flex items-center space-x-2"><button id="cal-prev" class="p-2 hover:bg-gray-100 rounded-lg"><i class="fas fa-chevron-left"></i></button><span id="cal-current" class="text-lg font-medium text-gray-800 w-48 text-center"></span><button id="cal-next" class="p-2 hover:bg-gray-100 rounded-lg"><i class="fas fa-chevron-right"></i></button></div></div><div class="bg-white rounded-2xl shadow-sm border overflow-hidden"><div id="calendarGrid" class="p-4"></div></div></div>`,scheduleForm:`<div class="fade-in"><h1 class="text-3xl font-bold text-gray-800 mb-8">ลงเวลาปฏิบัติงาน</h1><div class="bg-white rounded-2xl shadow-sm border p-6 mb-8"><h2 class="text-xl font-bold text-gray-800 mb-6">สร้างตารางงานใหม่</h2><form id="scheduleForm" class="space-y-6"><div class="grid grid-cols-1 md:grid-cols-2 gap-6"><div><label for="scheduleDate" class="block text-sm font-medium">วันที่ปฏิบัติงาน</label><input type="date" id="scheduleDate" class="w-full mt-1 p-2 border rounded-md" required></div><div><label for="scheduleUsername" class="block text-sm font-medium">Username</label><input type="text" id="scheduleUsername" class="w-full mt-1 p-2 border bg-gray-100 rounded-md" readonly></div></div><div class="grid grid-cols-1 md:grid-cols-2 gap-6"><div><label for="scheduleStartTime" class="block text-sm font-medium">เวลาเริ่มงาน</label><input type="time" id="scheduleStartTime" class="w-full mt-1 p-2 border rounded-md" required></div><div><label for="scheduleEndTime" class="block text-sm font-medium">เวลาเลิกงาน</label><input type="time" id="scheduleEndTime" class="w-full mt-1 p-2 border rounded-md" required></div></div><div><label for="scheduleBranch" class="block text-sm font-medium">สาขาที่เข้าปฏิบัติงาน</label><input list="branch-list" id="scheduleBranch" class="w-full mt-1 p-2 border rounded-md" placeholder="พิมพ์เพื่อค้นหา..." required><datalist id="branch-list"></datalist></div><div class="grid grid-cols-1 md:grid-cols-2 gap-6"><div><label for="scheduleArea" class="block text-sm font-medium">เขต</label><input type="text" id="scheduleArea" class="w-full mt-1 p-2 border bg-gray-100 rounded-md" readonly></div><div><label for="scheduleRegion" class="block text-sm font-medium">ภาค</label><input type="text" id="scheduleRegion" class="w-full mt-1 p-2 border bg-gray-100 rounded-md" readonly></div></div><div><label for="scheduleDetails" class="block text-sm font-medium">รายละเอียดงาน</label><textarea id="scheduleDetails" rows="3" class="w-full mt-1 p-2 border rounded-md" placeholder="ระบุรายละเอียดงาน..."></textarea></div><div class="flex justify-end"><button type="submit" id="saveScheduleBtn" class="px-6 py-3 bg-gradient-to-r from-primary to-secondary text-white rounded-xl">บันทึกตารางงาน</button></div></form><div id="scheduleSuccess" class="mt-4 p-4 bg-green-100 text-green-700 rounded-xl hidden"></div></div></div>`,activity:`<div class="fade-in"><h1 class="text-3xl font-bold text-gray-800 mb-8">Activity Log</h1><div class="bg-white rounded-2xl shadow-sm border overflow-hidden"><div class="p-6 border-b"><h2 class="text-xl font-bold text-gray-800">ประวัติการใช้งาน</h2></div><div class="overflow-x-auto"><table class="w-full"><thead class="bg-gray-50"><tr><th class="px-6 py-4 text-left text-xs font-medium uppercase">วัน-เวลา</th><th class="px-6 py-4 text-left text-xs font-medium uppercase">Username</th><th class="px-6 py-4 text-left text-xs font-medium uppercase">กิจกรรม</th></tr></thead><tbody id="activityTableBody" class="bg-white divide-y divide-gray-200"></tbody></table></div></div></div>`};return templates[pageId]||`<h2>Page not found</h2>`}
+    function showPage(pageId,element){document.querySelectorAll('.nav-btn').forEach(btn=>btn.classList.remove('text-primary','bg-blue-50'));if(element)element.classList.add('text-primary','bg-blue-50');const pageContainer=document.getElementById(pageId+'Page');if(pageContainer){document.querySelectorAll('.page-content').forEach(p=>p.classList.add('hidden'));pageContainer.classList.remove('hidden');pageContainer.innerHTML=getPageHTML(pageId);switch(pageId){case'dashboard':initDashboardPage();break;case'calendar':initCalendarPage();break;case'scheduleForm':initScheduleFormPage();break;case'activity':loadActivityLogs();break}}}
+    async function initDashboardPage(){document.getElementById('filter-month').value=new Date().toISOString().slice(0,7);await loadDashboardData();document.getElementById('apply-filters').addEventListener('click',applyDashboardFilters);document.getElementById('refresh-table').addEventListener('click',initDashboardPage);document.getElementById('dashboard-table-body').addEventListener('click',handleTableActions);document.querySelectorAll('.filter-dropdown').forEach(el=>el.addEventListener('change',updateDependentFilters))}
+    async function loadDashboardData(){const tableBody=document.getElementById('dashboard-table-body');const statsCards=document.getElementById('stats-cards');const loadingHTML=`<tr><td colspan="6" class="p-6 text-center text-gray-500"><i class="fas fa-spinner fa-spin mr-2"></i>กำลังโหลดข้อมูล...</td></tr>`;tableBody.innerHTML=loadingHTML;statsCards.innerHTML='';try{const response=await apiGet({action:'getSchedules',filters:JSON.stringify({month:document.getElementById('filter-month').value})});if(response.status==='success'){dashboardMasterData=response.data;populateAllFilters(dashboardMasterData);renderDashboardTable(dashboardMasterData)}else{tableBody.innerHTML=`<tr><td colspan="6" class="p-6 text-center text-gray-500">ไม่พบข้อมูล</td></tr>`;updateStatsCards([])}}catch(error){tableBody.innerHTML=`<tr><td colspan="6" class="p-6 text-center text-red-500">โหลดข้อมูลล้มเหลว</td></tr>`}}
+    function populateAllFilters(data,selected={}){const hubSelect=document.getElementById('filter-hub');const regionSelect=document.getElementById('filter-region');const areaSelect=document.getElementById('filter-area');const populate=(select,options,label,currentValue)=>{select.innerHTML=`<option value="">${label}</option>`;[...new Set(options)].sort().forEach(opt=>{if(opt)select.innerHTML+=`<option value="${opt}" ${opt===currentValue?'selected':''}>${opt}</option>`})};populate(regionSelect,data.map(r=>r[10]),'ภาคทั้งหมด',selected.region);populate(areaSelect,data.map(r=>r[9]),'เขตทั้งหมด',selected.area);if(currentUser.role.toLowerCase()!=='employee'){document.getElementById('user-filter-container').classList.remove('hidden');populate(hubSelect,data.map(r=>r[11]),'HUB ทั้งหมด',selected.hub)}}
+    function updateDependentFilters(event){const hub=document.getElementById('filter-hub').value;const area=document.getElementById('filter-area').value;const region=document.getElementById('filter-region').value;let filteredData=dashboardMasterData;if(hub)filteredData=filteredData.filter(r=>r[11]===hub);if(area)filteredData=filteredData.filter(r=>r[9]===area);if(region)filteredData=filteredData.filter(r=>r[10]===region);const selectedValues={hub,area,region};populateAllFilters(filteredData,selectedValues)}
+    function applyDashboardFilters(){const regionFilter=document.getElementById('filter-region').value;const areaFilter=document.getElementById('filter-area').value;const hubFilter=document.getElementById('filter-hub')?document.getElementById('filter-hub').value:null;let filteredData=dashboardMasterData;if(regionFilter)filteredData=filteredData.filter(r=>r[10]===regionFilter);if(areaFilter)filteredData=filteredData.filter(r=>r[9]===areaFilter);if(hubFilter)filteredData=filteredData.filter(r=>r[11]===hubFilter);renderDashboardTable(filteredData)}
+    function renderDashboardTable(data){const tableBody=document.getElementById('dashboard-table-body');tableBody.innerHTML='';updateStatsCards(data);if(data.length>0){data.forEach(row=>{const[id,ts,user,date,st,et,branch,details,status,area,region,nickname]=row;tableBody.innerHTML+=`<tr class="hover:bg-gray-50"><td class="p-3 text-sm">${new Date(date).toLocaleDateString('th-TH')}</td><td class="p-3 text-sm">${nickname}</td><td class="p-3 text-sm">${branch}</td><td class="p-3 text-sm">${area}</td><td class="p-3 text-sm">${region}</td><td class="p-3 text-sm text-center"><button class="text-blue-500 hover:text-blue-700 edit-btn" data-id="${id}" title="แก้ไข"><i class="fas fa-edit"></i></button><button class="text-red-500 hover:text-red-700 delete-btn ml-2" data-id="${id}" title="ลบ"><i class="fas fa-trash"></i></button></td></tr>`})}else{tableBody.innerHTML=`<tr><td colspan="6" class="p-6 text-center text-gray-500">ไม่พบข้อมูลตามเงื่อนไข</td></tr>`}}
+    function updateStatsCards(data){const cardsContainer=document.getElementById('stats-cards');cardsContainer.innerHTML=`<div class="bg-blue-100 p-4 rounded-lg"><p class="text-sm text-blue-800">แผนงานทั้งหมด</p><p class="text-2xl font-bold text-blue-900">${data.length}</p></div><div class="bg-green-100 p-4 rounded-lg"><p class="text-sm text-green-800">จำนวนสาขา</p><p class="text-2xl font-bold text-green-900">${new Set(data.map(r=>r[6])).size}</p></div><div class="bg-yellow-100 p-4 rounded-lg"><p class="text-sm text-yellow-800">จำนวนพนักงาน</p><p class="text-2xl font-bold text-yellow-900">${new Set(data.map(r=>r[2])).size}</p></div>`}
+    function handleTableActions(e){const target=e.target.closest('button');if(!target)return;const id=target.dataset.id;if(target.classList.contains('edit-btn'))openEditModal(id);else if(target.classList.contains('delete-btn'))handleDelete(id)}
+    async function openEditModal(id){try{const response=await apiGet({action:'getScheduleById',payload:JSON.stringify({id})});if(response.status==='success'){const data=response.data;const formContainer=document.getElementById('editScheduleForm');formContainer.innerHTML=`<input type="hidden" id="edit-schedule-id" value="${data[0]}"><div class="grid grid-cols-1 md:grid-cols-2 gap-6"><div><label class="block text-sm font-medium">วันที่ปฏิบัติงาน</label><input type="date" id="edit-scheduleDate" value="${new Date(data[3]).toISOString().slice(0,10)}" class="w-full mt-1 p-2 border rounded-md" required></div><div><label class="block text-sm font-medium">สาขา</label><input list="branch-list" id="edit-scheduleBranch" value="${data[6]}" class="w-full mt-1 p-2 border rounded-md" required></div></div><div class="grid grid-cols-1 md:grid-cols-2 gap-6"><div><label class="block text-sm font-medium">เวลาเริ่มงาน</label><input type="time" id="edit-scheduleStartTime" value="${data[4]}" class="w-full mt-1 p-2 border rounded-md" required></div><div><label class="block text-sm font-medium">เวลาเลิกงาน</label><input type="time" id="edit-scheduleEndTime" value="${data[5]}" class="w-full mt-1 p-2 border rounded-md" required></div></div><div class="grid grid-cols-1 md:grid-cols-2 gap-6"><div><label class="block text-sm font-medium">เขต</label><input type="text" id="edit-scheduleArea" value="${data[9]}" class="w-full mt-1 p-2 border bg-gray-100 rounded-md" readonly></div><div><label class="block text-sm font-medium">ภาค</label><input type="text" id="edit-scheduleRegion" value="${data[10]}" class="w-full mt-1 p-2 border bg-gray-100 rounded-md" readonly></div></div><div><label class="block text-sm font-medium">รายละเอียด</label><textarea id="edit-scheduleDetails" rows="3" class="w-full mt-1 p-2 border rounded-md">${data[7]||""}</textarea></div><div class="flex justify-end"><button type="submit" class="px-6 py-2 bg-green-500 text-white rounded-md hover:bg-green-600">บันทึกการเปลี่ยนแปลง</button></div>`;document.getElementById('editModal').classList.add('is-active');document.getElementById('editScheduleForm').addEventListener('submit',handleUpdateSchedule);document.getElementById('closeEditModalBtn').addEventListener('click',closeEditModal);document.getElementById('editModal').addEventListener('click',e=>{if(e.target.id==='editModal')closeEditModal()});document.getElementById('edit-scheduleBranch').addEventListener('input',e=>{const info=branchInfoMap.get(e.target.value);document.getElementById('edit-scheduleArea').value=info?info.area:'';document.getElementById('edit-scheduleRegion').value=info?info.region:''})}else{alert(response.message)}}catch(error){alert("เกิดข้อผิดพลาดในการดึงข้อมูล: "+error.message)}}
+    function closeEditModal(){document.getElementById('editModal').classList.remove('is-active')}
+    async function handleUpdateSchedule(e){e.preventDefault();const payload={id:document.getElementById('edit-schedule-id').value,workDate:document.getElementById('edit-scheduleDate').value,startTime:document.getElementById('edit-scheduleStartTime').value,endTime:document.getElementById('edit-scheduleEndTime').value,branch:document.getElementById('edit-scheduleBranch').value,details:document.getElementById('edit-scheduleDetails').value,area:document.getElementById('edit-scheduleArea').value,region:document.getElementById('edit-scheduleRegion').value,};try{const response=await apiGet({action:'editSchedule',payload:JSON.stringify(payload)});if(response.status==='success'){alert('แก้ไขข้อมูลสำเร็จ!');closeEditModal();initDashboardPage()}else{alert('แก้ไขข้อมูลไม่สำเร็จ: '+response.message)}}catch(error){alert('เกิดข้อผิดพลาด: '+error.message)}}
+    async function handleDelete(id){if(confirm('คุณแน่ใจหรือไม่ที่จะลบรายการนี้? การกระทำนี้ไม่สามารถย้อนกลับได้')){try{const response=await apiGet({action:'deleteSchedule',payload:JSON.stringify({id})});if(response.status==='success'){alert('ลบข้อมูลสำเร็จ!');initDashboardPage()}else{alert('ลบข้อมูลไม่สำเร็จ: '+response.message)}}catch(error){alert('เกิดข้อผิดพลาด: '+error.message)}}}
+    function initCalendarPage(){document.getElementById('cal-prev').addEventListener('click',()=>{calendarCurrentDate.setMonth(calendarCurrentDate.getMonth()-1);renderCalendar()});document.getElementById('cal-next').addEventListener('click',()=>{calendarCurrentDate.setMonth(calendarCurrentDate.getMonth()+1);renderCalendar()});document.getElementById('closeModalBtn').addEventListener('click',closeEventModal);document.getElementById('eventModal').addEventListener('click',e=>{if(e.target.id==='eventModal')closeEventModal()});loadCalendarData()}
+    async function loadCalendarData(){document.getElementById('calendarGrid').innerHTML=`<div class="p-6 text-center text-gray-500"><i class="fas fa-spinner fa-spin mr-2"></i>กำลังโหลดปฏิทิน...</div>`;try{const response=await apiGet({action:'getSchedules',filters:null});if(response.status==='success'){calendarEvents=response.data;renderCalendar()}}catch(error){document.getElementById('calendarGrid').innerHTML=`<p class="text-red-500 p-4">Failed to load calendar events.</p>`}}
+    function renderCalendar(){const grid=document.getElementById('calendarGrid');if(!grid)return;const month=calendarCurrentDate.getMonth(),year=calendarCurrentDate.getFullYear();document.getElementById('cal-current').textContent=calendarCurrentDate.toLocaleDateString('th-TH',{month:'long',year:'numeric'});const firstDay=new Date(year,month,1).getDay(),daysInMonth=new Date(year,month+1,0).getDate();let html=`<div class="grid grid-cols-7 gap-1 text-center font-medium text-gray-500 mb-2"><div>อา</div><div>จ</div><div>อ</div><div>พ</div><div>พฤ</div><div>ศ</div><div>ส</div></div><div class="grid grid-cols-7 gap-1">`;for(let i=0;i<firstDay;i++)html+=`<div></div>`;for(let day=1;day<=daysInMonth;day++){const date=new Date(year,month,day);const dayEvents=calendarEvents.filter(e=>new Date(e[3]).toDateString()===date.toDateString());html+=`<div class="border rounded-lg p-2 min-h-[100px] cursor-pointer hover:bg-gray-100 ${new Date().toDateString()===date.toDateString()?'bg-blue-50':''}" onclick="showEventModal('${date.toISOString()}')"><div class="text-sm ${new Date().toDateString()===date.toDateString()?'font-bold text-primary':''}">${day}</div><div class="text-xs mt-1 space-y-1 overflow-hidden">`;dayEvents.slice(0,3).forEach(event=>{html+=`<div class="bg-primary text-white rounded px-1 truncate" title="${event[11]}_${event[6]}">${event[11]}_${event[6]}</div>`});if(dayEvents.length>3)html+=`<div class="text-gray-500 text-center">+${dayEvents.length-3}</div>`;html+=`</div></div>`}html+=`</div>`;grid.innerHTML=html}
+    function showEventModal(dateString){const modal=document.getElementById('eventModal');const modalDate=document.getElementById('modalDate');const modalContent=document.getElementById('modalContent');const date=new Date(dateString);modalDate.textContent=date.toLocaleDateString('th-TH',{weekday:'long',year:'numeric',month:'long',day:'numeric'});const dayEvents=calendarEvents.filter(e=>new Date(e[3]).toDateString()===date.toDateString());modalContent.innerHTML='';if(dayEvents.length>0){dayEvents.forEach(event=>{modalContent.innerHTML+=`<div class="border p-3 rounded-md"><p class="font-semibold">${event[11]}_${event[6]}</p><p class="text-sm text-gray-600">${event[4]} - ${event[5]}</p><p class="text-sm text-gray-500 mt-1">${event[7]||'ไม่มีรายละเอียด'}</p></div>`})}else{modalContent.innerHTML=`<p class="text-gray-500">ไม่มีแผนงานสำหรับวันนี้</p>`}modal.classList.add('is-active')}
+    function closeEventModal(){document.getElementById('eventModal').classList.remove('is-active')}
+    function initScheduleFormPage(){document.getElementById('scheduleUsername').value=currentUser.username;document.getElementById('scheduleDate').valueAsDate=new Date();populateBranchDatalist();document.getElementById('scheduleBranch').addEventListener('input',updateBranchInfo);document.getElementById('scheduleForm').addEventListener('submit',handleSaveSchedule)}
+    async function fetchBranchData(){try{const response=await apiGet({action:'getBranchData'});if(response.status==='success'){response.data.forEach(([branchName,area,region])=>{branchInfoMap.set(branchName,{area,region})})}}catch(error){console.error("Failed to fetch branches:",error)}}
+    function populateBranchDatalist(){const dataList=document.getElementById('branch-list');if(!dataList)return;dataList.innerHTML='';const onlineOption=document.createElement('option');onlineOption.value='ออนไลน์';dataList.appendChild(onlineOption);branchInfoMap.set('ออนไลน์',{area:'N/A',region:'N/A'});branchInfoMap.forEach((value,key)=>{if(key!=='ออนไลน์'){const option=document.createElement('option');option.value=key;dataList.appendChild(option)}})}
+    function updateBranchInfo(e){const info=branchInfoMap.get(e.target.value);document.getElementById('scheduleArea').value=info?info.area:'';document.getElementById('scheduleRegion').value=info?info.region:''}
+    async function handleSaveSchedule(e){e.preventDefault();const btn=document.getElementById('saveScheduleBtn');const successMsg=document.getElementById('scheduleSuccess');const payload={username:currentUser.username,workDate:document.getElementById('scheduleDate').value,startTime:document.getElementById('scheduleStartTime').value,endTime:document.getElementById('scheduleEndTime').value,branch:document.getElementById('scheduleBranch').value,details:document.getElementById('scheduleDetails').value,area:document.getElementById('scheduleArea').value,region:document.getElementById('scheduleRegion').value,};btn.disabled=true;btn.textContent='กำลังบันทึก...';try{const response=await apiGet({action:'saveSchedule',payload:JSON.stringify(payload)});if(response.status==='success'){successMsg.textContent='บันทึกตารางงานเรียบร้อยแล้ว!';successMsg.classList.remove('hidden');document.getElementById('scheduleForm').reset();initScheduleFormPage();setTimeout(()=>successMsg.classList.add('hidden'),4000)}else{throw new Error(response.message)}}catch(error){alert('เกิดข้อผิดพลาดในการบันทึก: '+error.message)}finally{btn.disabled=false;btn.textContent='บันทึกตารางงาน'}}
+    async function loadActivityLogs(){const tableBody=document.getElementById('activityTableBody');tableBody.innerHTML=`<tr><td colspan="3" class="p-6 text-center text-gray-500"><i class="fas fa-spinner fa-spin mr-2"></i>กำลังโหลด...</td></tr>`;try{const response=await apiGet({action:'getActivityLogs'});tableBody.innerHTML='';if(response.status==='success'&&response.data.length>0){response.data.forEach(([timestamp,username,action])=>{tableBody.innerHTML+=`<tr class="hover:bg-gray-50"><td class="p-3 text-sm">${new Date(timestamp).toLocaleString('th-TH')}</td><td class="p-3 text-sm">${username}</td><td class="p-3 text-sm">${action}</td></tr>`})}else{tableBody.innerHTML=`<tr><td colspan="3" class="p-6 text-center text-gray-500">ไม่พบข้อมูล</td></tr>`}}catch(error){tableBody.innerHTML=`<tr><td colspan="3" class="p-6 text-center text-red-500">โหลดข้อมูลล้มเหลว</td></tr>`}}
+    
+    </script>
 </body>
 </html>
