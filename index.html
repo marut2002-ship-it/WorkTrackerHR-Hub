@@ -72,7 +72,7 @@
     <script>
     // ============== JAVASCRIPT LOGIC (SEPARATE FILE VERSION) ==============
     
-    const SCRIPT_URL = 'https://script.google.com/a/macros/srisawadpower.com/s/AKfycbxJMnrUrE7ND9PjPl3qIw7_phwESmBjvq-8pyR0CB2sz2HzMKPUrCmxJjn2uEJLhD_q/exec';
+    const SCRIPT_URL = 'https://script.google.com/a/macros/srisawadpower.com/s/AKfycbzh6YR4NT_JCtbSsDPG3n9NH_51cSzHllOwVsjbX502wGyfJDyrvt-HcPchiByPa68/exec';
     let currentUser = null;
     const branchInfoMap = new Map();
     let calendarEvents = [];
@@ -85,7 +85,6 @@
         checkSession();
     });
 
-    // API function using JSONP
     function apiGet(params) {
         return new Promise((resolve, reject) => {
             const url = new URL(SCRIPT_URL);
@@ -143,7 +142,7 @@
                 initializeApp();
             } else { throw new Error(response.message || 'Login failed'); }
         } catch (error) {
-            loginError.textContent = 'ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง หรือเกิดข้อผิดพลาด';
+            loginError.textContent = 'ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง หรือเกิดข้อผิดพลาดในการเชื่อมต่อ';
             loginError.classList.remove('hidden');
         } finally {
             loginText.textContent = 'เข้าสู่ระบบ';
