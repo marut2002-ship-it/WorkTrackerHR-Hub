@@ -32,7 +32,7 @@
             </form>
             <div id="loginError" class="mt-4 p-3 bg-red-100 text-red-700 rounded-xl hidden"></div>
         </div>
-        <p class="text-center text-xs text-gray-400 mt-4">Version 2.0 (Stable)</p>
+        <p class="text-center text-xs text-gray-400 mt-4">Version 3.2 (Final & Complete)</p>
     </div>
 
 <!-- Main App -->
@@ -45,6 +45,8 @@
                     <div id="main-nav-links" class="hidden md:flex space-x-6">
                         <button onclick="showPage('dashboard', this)" class="nav-btn text-gray-700 px-3 py-2 rounded-lg">ภาพรวม</button>
                         <button onclick="showPage('calendar', this)" class="nav-btn text-gray-700 px-3 py-2 rounded-lg">ปฏิทิน</button>
+                        <button onclick="showPage('scheduleForm', this)" class="nav-btn text-gray-700 px-3 py-2 rounded-lg">ลงเวลาปฏิบัติงาน</button>
+                        <button id="activity-log-nav" onclick="showPage('activity', this)" class="nav-btn text-gray-700 px-3 py-2 rounded-lg">Activity Log</button>
                     </div>
                 </div>
                 <div class="flex items-center space-x-4">
@@ -60,6 +62,8 @@
     <main>
         <div id="dashboardPage" class="page-content max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8"></div>
         <div id="calendarPage" class="page-content max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 hidden"></div>
+        <div id="scheduleFormPage" class="page-content max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 hidden"></div>
+        <div id="activityPage" class="page-content max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 hidden"></div>
     </main>
 </div>
 
@@ -67,11 +71,12 @@
 // ####################################################################
 // ##  สำคัญ! วาง URL ใหม่ล่าสุดที่ได้จากการ DEPLOY ของคุณที่นี่   ##
 // ####################################################################
-const SCRIPT_URL = 'https://script.google.com/a/macros/srisawadpower.com/s/AKfycbwTBXSRw4y9kn-fVOB13uNyb5z2ngUoATrQrC5-oVUyh5uRDyQF8pLyjdPjwZ6JXhyw/exec'; 
+const SCRIPT_URL = 'https://script.google.com/a/macros/srisawadpower.com/s/AKfycbzRrPppv1p4jnqhFEu7v8xo7UV1x4iRdhZr6487mvgHa-JKFSe1kGMp8HPjxQTtP6wE/exec'; 
 // ####################################################################
 
 let currentUser = null;
 let masterScheduleData = [];
+const branchInfoMap = new Map();
 
 // --- UTILITIES & API ---
 function apiGet(params) {
@@ -81,6 +86,11 @@ function apiGet(params) {
             params.username = currentUser.username;
             params.role = currentUser.role;
         }
+        // Use JSON.stringify for payload
+        if (params.payload) {
+            params.payload = JSON.stringify(params.payload);
+        }
+
         const script = document.createElement('script');
         const callbackName = 'jsonp_callback_' + Math.round(1e5 * Math.random());
         url.searchParams.append('callback', callbackName);
@@ -122,19 +132,10 @@ function checkSession() {
 
 async function handleLogin(e) {
     e.preventDefault();
-    const loginBtn = document.getElementById('loginBtn');
-    const loginText = document.getElementById('loginText');
-    const loginSpinner = document.getElementById('loginSpinner');
-    const loginError = document.getElementById('loginError');
-    
-    loginText.classList.add('hidden');
-    loginSpinner.classList.remove('hidden');
-    loginBtn.disabled = true;
-    loginError.classList.add('hidden');
-
+    const loginBtn = document.getElementById('loginBtn'), loginText = document.getElementById('loginText'), loginSpinner = document.getElementById('loginSpinner'), loginError = document.getElementById('loginError');
+    loginText.classList.add('hidden'); loginSpinner.classList.remove('hidden'); loginBtn.disabled = true; loginError.classList.add('hidden');
     try {
-        const username = document.getElementById('username').value;
-        const password = document.getElementById('password').value;
+        const username = document.getElementById('username').value, password = document.getElementById('password').value;
         const response = await apiGet({ action: 'login', username, password });
         currentUser = response.user;
         sessionStorage.setItem('currentUser', JSON.stringify(currentUser));
@@ -143,32 +144,40 @@ async function handleLogin(e) {
         loginError.textContent = 'ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง';
         loginError.classList.remove('hidden');
     } finally {
-        loginText.classList.remove('hidden');
-        loginSpinner.classList.add('hidden');
-        loginBtn.disabled = false;
+        loginText.classList.remove('hidden'); loginSpinner.classList.add('hidden'); loginBtn.disabled = false;
     }
 }
 
 async function initializeApp() {
     document.getElementById('userDisplay').textContent = currentUser.fullName;
     document.getElementById('roleDisplay').textContent = currentUser.role;
+    if (currentUser.role.toLowerCase() === 'employee') {
+        document.getElementById('activity-log-nav').style.display = 'none';
+    }
     document.getElementById('loginPage').classList.add('hidden');
     document.getElementById('mainApp').classList.remove('hidden');
+    await refreshDataAndShowPage('dashboard');
+}
 
+async function refreshDataAndShowPage(pageId) {
+    const loadingContainer = document.getElementById('dashboardPage');
+    loadingContainer.innerHTML = `<div class="text-center p-8 text-gray-500"><i class="fas fa-spinner fa-spin mr-2"></i>กำลังโหลดข้อมูล...</div>`;
     try {
-        // Fetch all data once and store it
-        const response = await apiGet({ action: 'getAllSchedules' });
-        masterScheduleData = response.data;
-        showPage('dashboard', document.querySelector('.nav-btn'));
+        const [scheduleResponse, branchResponse] = await Promise.all([
+            apiGet({ action: 'getAllSchedules' }),
+            apiGet({ action: 'getBranchData' })
+        ]);
+        masterScheduleData = scheduleResponse.data;
+        branchResponse.data.forEach(([branchName, area, region]) => {
+            branchInfoMap.set(branchName, { area, region });
+        });
+        showPage(pageId || 'dashboard', document.querySelector('.nav-btn'));
     } catch (error) {
-        alert('ไม่สามารถโหลดข้อมูลตารางงานได้: ' + error.message);
+        alert('ไม่สามารถโหลดข้อมูลเริ่มต้นได้: ' + error.message);
     }
 }
 
-function logout() {
-    sessionStorage.removeItem('currentUser');
-    location.reload();
-}
+function logout() { sessionStorage.removeItem('currentUser'); location.reload(); }
 
 // --- PAGE ROUTING & RENDERING ---
 function showPage(pageId, element) {
@@ -179,107 +188,138 @@ function showPage(pageId, element) {
     const pageContainer = document.getElementById(pageId + 'Page');
     pageContainer.classList.remove('hidden');
     
-    if (pageId === 'dashboard') {
-        renderDashboard(pageContainer);
-    } else if (pageId === 'calendar') {
-        renderCalendar(pageContainer);
+    pageContainer.innerHTML = getPageHTML(pageId);
+
+    switch (pageId) {
+        case 'dashboard': renderDashboard(); break;
+        case 'calendar': renderCalendar(); break;
+        case 'scheduleForm': initScheduleFormPage(); break;
+        case 'activity': loadActivityLogs(); break;
     }
 }
 
-// --- DASHBOARD PAGE ---
-function renderDashboard(container) {
-    container.innerHTML = `
-        <div class="fade-in">
-            <h1 class="text-2xl font-bold text-gray-800 mb-4">ภาพรวมตารางงาน</h1>
-            <div class="bg-white rounded-lg shadow-sm border p-4">
-                <div class="flex justify-end mb-4">
-                    <input type="month" id="month-filter" class="p-2 border rounded-md">
-                </div>
-                <div class="overflow-x-auto">
-                    <table class="w-full dense-table">
-                        <thead class="bg-gray-50">
-                            <tr>
-                                <th class="p-3 text-left text-xs font-medium uppercase">วันที่</th>
-                                <th class="p-3 text-left text-xs font-medium uppercase">พนักงาน</th>
-                                <th class="p-3 text-left text-xs font-medium uppercase">สาขา</th>
-                                <th class="p-3 text-left text-xs font-medium uppercase">เขต</th>
-                                <th class="p-3 text-left text-xs font-medium uppercase">ภาค</th>
-                            </tr>
-                        </thead>
-                        <tbody id="dashboard-table-body" class="divide-y divide-gray-200"></tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-    `;
+function getPageHTML(pageId) {
+    const templates = {
+        dashboard: `<div class="fade-in"><h1 class="text-2xl font-bold text-gray-800 mb-4">ภาพรวมตารางงาน</h1><div class="bg-white rounded-lg shadow-sm border p-4"><div class="flex justify-end mb-4"><input type="month" id="month-filter" class="p-2 border rounded-md"></div><div class="overflow-x-auto"><table class="w-full dense-table"><thead class="bg-gray-50"><tr><th class="p-3 text-left text-xs font-medium uppercase">วันที่</th><th class="p-3 text-left text-xs font-medium uppercase">พนักงาน</th><th class="p-3 text-left text-xs font-medium uppercase">สาขา</th><th class="p-3 text-left text-xs font-medium uppercase">เขต</th><th class="p-3 text-left text-xs font-medium uppercase">ภาค</th></tr></thead><tbody id="dashboard-table-body" class="divide-y divide-gray-200"></tbody></table></div></div></div>`,
+        calendar: `<div class="fade-in"><div class="flex flex-col sm:flex-row justify-between items-center mb-4"><h1 class="text-2xl font-bold text-gray-800" id="calendar-title"></h1><div class="flex items-center gap-2 mt-4 sm:mt-0"><button id="cal-prev" class="p-2 hover:bg-gray-100 rounded-md"><i class="fas fa-chevron-left"></i></button><button id="cal-today" class="px-4 py-2 text-sm font-semibold border rounded-md hover:bg-gray-100">วันนี้</button><button id="cal-next" class="p-2 hover:bg-gray-100 rounded-md"><i class="fas fa-chevron-right"></i></button></div></div><div class="bg-white rounded-lg shadow-sm border p-4"><div id="calendar-grid" class="grid grid-cols-7 gap-px bg-gray-200 border-t border-l"></div></div></div>`,
+        scheduleForm: `<div class="fade-in"><h1 class="text-3xl font-bold text-gray-800 mb-8">ลงเวลาปฏิบัติงาน</h1><div class="bg-white rounded-2xl shadow-sm border p-6 mb-8"><h2 class="text-xl font-bold text-gray-800 mb-6">สร้างตารางงานใหม่</h2><form id="scheduleForm" class="space-y-6"><div class="grid grid-cols-1 md:grid-cols-2 gap-6"><div><label for="scheduleDate" class="block text-sm font-medium">วันที่ปฏิบัติงาน</label><input type="date" id="scheduleDate" class="w-full mt-1 p-2 border rounded-md" required></div><div><label for="scheduleUsername" class="block text-sm font-medium">Username</label><input type="text" id="scheduleUsername" class="w-full mt-1 p-2 border bg-gray-100 rounded-md" readonly></div></div><div class="grid grid-cols-1 md:grid-cols-2 gap-6"><div><label for="scheduleStartTime" class="block text-sm font-medium">เวลาเริ่มงาน</label><input type="time" id="scheduleStartTime" class="w-full mt-1 p-2 border rounded-md" required></div><div><label for="scheduleEndTime" class="block text-sm font-medium">เวลาเลิกงาน</label><input type="time" id="scheduleEndTime" class="w-full mt-1 p-2 border rounded-md" required></div></div><div><label for="scheduleBranch" class="block text-sm font-medium">สาขาที่เข้าปฏิบัติงาน</label><input list="branch-list" id="scheduleBranch" class="w-full mt-1 p-2 border rounded-md" placeholder="พิมพ์เพื่อค้นหา..." required><datalist id="branch-list"></datalist></div><div class="grid grid-cols-1 md:grid-cols-2 gap-6"><div><label for="scheduleArea" class="block text-sm font-medium">เขต</label><input type="text" id="scheduleArea" class="w-full mt-1 p-2 border bg-gray-100 rounded-md" readonly></div><div><label for="scheduleRegion" class="block text-sm font-medium">ภาค</label><input type="text" id="scheduleRegion" class="w-full mt-1 p-2 border bg-gray-100 rounded-md" readonly></div></div><div class="flex justify-end"><button type="submit" id="saveScheduleBtn" class="px-6 py-3 bg-primary text-white rounded-xl">บันทึก</button></div></form><div id="scheduleSuccess" class="mt-4 p-4 bg-green-100 text-green-700 rounded-xl hidden"></div></div></div>`,
+        activity: `<div class="fade-in"><h1 class="text-3xl font-bold text-gray-800 mb-8">Activity Log</h1><div class="bg-white rounded-2xl shadow-sm border overflow-hidden"><div class="overflow-x-auto"><table class="w-full"><thead class="bg-gray-50"><tr><th class="px-6 py-4 text-left text-xs font-medium uppercase">วัน-เวลา</th><th class="px-6 py-4 text-left text-xs font-medium uppercase">Username</th><th class="px-6 py-4 text-left text-xs font-medium uppercase">กิจกรรม</th></tr></thead><tbody id="activityTableBody" class="bg-white divide-y divide-gray-200"></tbody></table></div></div></div>`
+    };
+    return templates[pageId] || '';
+}
 
+// --- DASHBOARD PAGE ---
+function renderDashboard() {
     const monthFilter = document.getElementById('month-filter');
     monthFilter.value = new Date().toISOString().slice(0, 7);
-    
     const renderTable = () => {
         const [year, month] = monthFilter.value.split('-').map(Number);
         const filteredData = masterScheduleData.filter(row => {
-            const rowDate = new Date(row[3]); // Column D is date
+            if (!row[3]) return false;
+            const rowDate = new Date(row[3]);
             return rowDate.getFullYear() === year && rowDate.getMonth() + 1 === month;
         });
-
         const tableBody = document.getElementById('dashboard-table-body');
-        if (filteredData.length === 0) {
-            tableBody.innerHTML = `<tr><td colspan="5" class="p-6 text-center text-gray-500">ไม่พบข้อมูลในเดือนที่เลือก</td></tr>`;
-            return;
-        }
-
-        tableBody.innerHTML = filteredData.map(row => {
-            const [id, ts, user, date, st, et, branch, details, status, area, region, nickname] = row;
-            return `
-                <tr class="hover:bg-gray-50">
-                    <td class="p-3 text-sm">${new Date(date).toLocaleDateString('th-TH')}</td>
-                    <td class="p-3 text-sm">${nickname}</td>
-                    <td class="p-3 text-sm">${branch}</td>
-                    <td class="p-3 text-sm">${area}</td>
-                    <td class="p-3 text-sm">${region}</td>
-                </tr>
-            `;
-        }).join('');
+        tableBody.innerHTML = filteredData.length === 0 
+            ? `<tr><td colspan="5" class="p-6 text-center text-gray-500">ไม่พบข้อมูล</td></tr>`
+            : filteredData.map(row => {
+                const [id, ts, user, date, st, et, branch, d, s, area, region, nickname] = row;
+                return `<tr><td class="p-3 text-sm">${new Date(date).toLocaleDateString('th-TH')}</td><td class="p-3 text-sm">${nickname||''}</td><td class="p-3 text-sm">${branch||''}</td><td class="p-3 text-sm">${area||''}</td><td class="p-3 text-sm">${region||''}</td></tr>`;
+            }).join('');
     };
-    
     monthFilter.addEventListener('change', renderTable);
-    renderTable(); // Initial render
+    renderTable();
 }
 
 // --- CALENDAR PAGE ---
-function renderCalendar(container) {
-    container.innerHTML = `
-        <div class="fade-in">
-            <h1 class="text-2xl font-bold text-gray-800 mb-4">ปฏิทิน</h1>
-            <div class="bg-white rounded-lg shadow-sm border p-4">
-                <div id="calendar-container"></div>
-            </div>
-        </div>
-    `;
+function renderCalendar() {
+    let currentDate = new Date();
+    const drawCalendar = () => {
+        const year = currentDate.getFullYear(), month = currentDate.getMonth();
+        document.getElementById('calendar-title').textContent = currentDate.toLocaleDateString('th-TH',{month:'long',year:'numeric'});
+        const calendarGrid = document.getElementById('calendar-grid');
+        calendarGrid.innerHTML = ['อา','จ','อ','พ','พฤ','ศ','ส'].map(d => `<div class="text-center font-semibold text-sm py-2 bg-gray-50 border-b border-r">${d}</div>`).join('');
+        
+        const firstDay = new Date(year, month, 1).getDay(), daysInMonth = new Date(year, month + 1, 0).getDate();
+        for (let i = 0; i < firstDay; i++) { calendarGrid.innerHTML += `<div class="bg-gray-50 border-b border-r"></div>`; }
 
-    const calendarEl = document.getElementById('calendar-container');
-    const calendar = new FullCalendar.Calendar(calendarEl, {
-        locale: 'th',
-        initialView: 'dayGridMonth',
-        headerToolbar: {
-            left: 'prev,next today',
-            center: 'title',
-            right: 'dayGridMonth,timeGridWeek'
-        },
-        events: masterScheduleData.map(row => {
-            const [id, ts, user, date, st, et, branch, details, status, area, region, nickname] = row;
-            const eventDate = new Date(date);
-            return {
-                title: `${nickname}: ${branch}`,
-                start: eventDate,
-                allDay: true
-            };
-        })
+        for (let day = 1; day <= daysInMonth; day++) {
+            const date = new Date(year, month, day), dateString = date.toISOString().slice(0, 10);
+            const isToday = dateString === new Date().toISOString().slice(0, 10);
+            const dayEvents = masterScheduleData.filter(row => row[3] === dateString);
+            let eventsHtml = dayEvents.map(row => {
+                const [id, ts, user, d, st, et, branch, details, status, area, region, nickname] = row;
+                return `<div class="bg-blue-500 text-white rounded-sm px-2 py-1 text-xs mb-1 truncate" title="${st || ''} ${nickname || ''}: ${branch || ''}"><span class="font-semibold">${st || ''}</span> ${nickname || ''}</div>`;
+            }).join('');
+            calendarGrid.innerHTML += `<div class="bg-white min-h-[120px] p-2 border-b border-r relative"><span class="text-sm ${isToday ? 'bg-primary text-white rounded-full w-6 h-6 flex items-center justify-center font-bold' : ''}">${day}</span><div class="mt-2 space-y-1">${eventsHtml}</div></div>`;
+        }
+    };
+    document.getElementById('cal-prev').addEventListener('click', () => { currentDate.setMonth(currentDate.getMonth() - 1); drawCalendar(); });
+    document.getElementById('cal-next').addEventListener('click', () => { currentDate.setMonth(currentDate.getMonth() + 1); drawCalendar(); });
+    document.getElementById('cal-today').addEventListener('click', () => { currentDate = new Date(); drawCalendar(); });
+    drawCalendar();
+}
+
+// --- SCHEDULE FORM PAGE ---
+function initScheduleFormPage() {
+    document.getElementById('scheduleUsername').value = currentUser.username;
+    document.getElementById('scheduleDate').valueAsDate = new Date();
+    const dataList = document.getElementById('branch-list');
+    dataList.innerHTML = '';
+    branchInfoMap.forEach((value, key) => { dataList.innerHTML += `<option value="${key}">`; });
+    document.getElementById('scheduleBranch').addEventListener('input', (e) => {
+        const info = branchInfoMap.get(e.target.value);
+        document.getElementById('scheduleArea').value = info ? info.area : '';
+        document.getElementById('scheduleRegion').value = info ? info.region : '';
     });
-    calendar.render();
+    document.getElementById('scheduleForm').addEventListener('submit', handleSaveSchedule);
+}
+
+async function handleSaveSchedule(e) {
+    e.preventDefault();
+    const btn = document.getElementById('saveScheduleBtn');
+    const successMsg = document.getElementById('scheduleSuccess');
+    const payload = {
+        username: currentUser.username,
+        workDate: document.getElementById('scheduleDate').value,
+        startTime: document.getElementById('scheduleStartTime').value,
+        endTime: document.getElementById('scheduleEndTime').value,
+        branch: document.getElementById('scheduleBranch').value,
+        area: document.getElementById('scheduleArea').value,
+        region: document.getElementById('scheduleRegion').value,
+    };
+    btn.disabled = true; btn.textContent = 'กำลังบันทึก...';
+    try {
+        await apiGet({ action: 'saveSchedule', payload });
+        successMsg.textContent = 'บันทึกตารางงานเรียบร้อยแล้ว!';
+        successMsg.classList.remove('hidden');
+        document.getElementById('scheduleForm').reset();
+        setTimeout(() => successMsg.classList.add('hidden'), 4000);
+        await refreshDataAndShowPage('dashboard'); // Refresh all data
+    } catch(error) {
+        alert('เกิดข้อผิดพลาดในการบันทึก: ' + error.message);
+    } finally {
+        btn.disabled = false; btn.textContent = 'บันทึก';
+    }
+}
+
+// --- ACTIVITY LOG PAGE ---
+async function loadActivityLogs() {
+    const tableBody = document.getElementById('activityTableBody');
+    tableBody.innerHTML = `<tr><td colspan="3" class="p-6 text-center text-gray-500"><i class="fas fa-spinner fa-spin mr-2"></i>Loading...</td></tr>`;
+    try {
+        const response = await apiGet({ action: 'getActivityLogs' });
+        if (response.data.length === 0) {
+            tableBody.innerHTML = `<tr><td colspan="3" class="p-6 text-center text-gray-500">ไม่พบข้อมูล</td></tr>`;
+        } else {
+            tableBody.innerHTML = response.data.map(([timestamp, username, action]) => {
+                return `<tr><td class="p-3 text-sm">${timestamp}</td><td class="p-3 text-sm">${username}</td><td class="p-3 text-sm">${action}</td></tr>`;
+            }).join('');
+        }
+    } catch(error) {
+        tableBody.innerHTML = `<tr><td colspan="3" class="p-6 text-center text-red-500">โหลดข้อมูลล้มเหลว</td></tr>`;
+    }
 }
 </script>
-
 </body>
 </html>
