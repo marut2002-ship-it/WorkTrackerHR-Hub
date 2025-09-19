@@ -12,84 +12,38 @@
     </script>
     <style>
         .fade-in{animation:fadeIn .3s ease-in}@keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}.loading{animation:spin 1s linear infinite}@keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}.modal{display:none}.modal.is-active{display:flex}.dense-table td,.dense-table th{padding:.5rem .75rem}:root{--fc-border-color:#e5e7eb;--fc-list-event-hover-bg-color:#f9fafb;--fc-event-border-radius:4px;--fc-event-font-size:.8em;--fc-event-padding-block:2px;--fc-event-padding-inline:6px}.fc .fc-toolbar-title{font-size:1.5rem;font-weight:600}.fc .fc-button-primary{background-color:#fff;border-color:#d1d5db;color:#374151}.fc .fc-button-primary:hover{background-color:#f9fafb}.fc .fc-button-primary:active,.fc .fc-button-primary:focus{box-shadow:none}.fc .fc-button-primary.fc-button-active{background-color:#EFF6FF;border-color:#3B82F6;color:#3B82F6}.fc .fc-day-today{background-color:#f9fafb!important}
-        /* UPDATED: New Calendar Event Style */
-        .fc-event { cursor: pointer; }
-        .fc-event-main {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            padding: 2px 4px;
-        }
-        .fc-event-dot {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-        }
-        .fc-event-time { font-weight: 600; color: #1f2937; }
-        .fc-event-title { color: #374151; }
-        .fc-daygrid-event {
-            background-color: #EFF6FF !important; /* Light Blue BG */
-            border: 1px solid #BFDBFE !important; /* Slightly Darker Blue Border */
-        }
+        .fc-event { cursor: pointer; } .fc-event-main-frame { display: flex; align-items: center; gap: 6px; padding: 2px 4px; } .fc-event-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; } .fc-event-time { font-weight: 600; color: #1f2937; } .fc-event-title-container { color: #374151; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } .fc-daygrid-event { background-color: #EFF6FF !important; border: 1px solid #BFDBFE !important; }
     </style>
 </head>
 <body class="bg-gray-50 font-sans">
-    <!-- Login Page -->
     <div id="loginPage" class="min-h-screen flex flex-col items-center justify-center p-4">
         <div class="bg-white rounded-2xl shadow-xl p-8 w-full max-w-md fade-in">
-             <div class="text-center mb-8">
-                <div class="w-16 h-16 bg-gradient-to-r from-primary to-secondary rounded-full mx-auto mb-4 flex items-center justify-center"><svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg></div>
-                <h1 class="text-2xl font-bold text-gray-800">Work Tracker</h1>
-                <p class="text-gray-600 mt-2">เข้าสู่ระบบเพื่อจัดการงานของคุณ</p>
-            </div>
+             <div class="text-center mb-8"><div class="w-16 h-16 bg-gradient-to-r from-primary to-secondary rounded-full mx-auto mb-4 flex items-center justify-center"><svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg></div><h1 class="text-2xl font-bold text-gray-800">Work Tracker</h1><p class="text-gray-600 mt-2">เข้าสู่ระบบเพื่อจัดการงานของคุณ</p></div>
             <form id="loginForm" class="space-y-6">
                 <div><label class="block text-sm font-medium text-gray-700 mb-2">Username</label><input type="text" id="username" class="w-full px-4 py-3 border border-gray-300 rounded-xl" required></div>
                 <div class="relative"><label class="block text-sm font-medium text-gray-700 mb-2">Password</label><input type="password" id="password" class="w-full px-4 py-3 border border-gray-300 rounded-xl" required><button type="button" id="togglePassword" class="absolute inset-y-0 right-0 top-7 pr-3 flex items-center text-gray-500"><i class="fas fa-eye"></i></button></div>
-                <button type="submit" id="loginBtn" class="w-full bg-primary text-white py-3 rounded-xl font-medium flex items-center justify-center">
-                    <span id="loginText">เข้าสู่ระบบ</span>
-                    <div id="loginSpinner" class="loading w-5 h-5 border-2 border-white border-t-transparent rounded-full ml-2 hidden"></div>
-                </button>
+                <button type="submit" id="loginBtn" class="w-full bg-primary text-white py-3 rounded-xl font-medium flex items-center justify-center"><span id="loginText">เข้าสู่ระบบ</span><div id="loginSpinner" class="loading w-5 h-5 border-2 border-white border-t-transparent rounded-full ml-2 hidden"></div></button>
             </form>
             <div id="loginError" class="mt-4 p-3 bg-red-100 text-red-700 rounded-xl hidden"></div>
         </div>
-        <p class="text-center text-xs text-gray-400 mt-4">Version 4.2</p>
+        <p class="text-center text-xs text-gray-400 mt-4">Version 5.0 (Final)</p>
     </div>
-
-<!-- Main App -->
-<div id="mainApp" class="hidden">
-    <nav class="bg-white shadow-sm border-b">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between items-center h-16">
-                <div class="flex items-center space-x-8"><div class="flex items-center"><div class="w-8 h-8 bg-gradient-to-r from-primary to-secondary rounded-lg flex items-center justify-center"><svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg></div><span class="ml-2 text-xl font-bold text-gray-800">Work Tracker</span></div>
-                    <div id="main-nav-links" class="hidden md:flex space-x-6">
-                        <button onclick="showPage('dashboard', this)" class="nav-btn text-gray-700 px-3 py-2 rounded-lg">ภาพรวม</button>
-                        <button onclick="showPage('calendar', this)" class="nav-btn text-gray-700 px-3 py-2 rounded-lg">ปฏิทิน</button>
-                        <button onclick="showPage('scheduleForm', this)" class="nav-btn text-gray-700 px-3 py-2 rounded-lg">ลงเวลาปฏิบัติงาน</button>
-                        <button id="activity-log-nav" onclick="showPage('activity', this)" class="nav-btn text-gray-700 px-3 py-2 rounded-lg">Activity Log</button>
-                    </div>
-                </div>
-                <div class="flex items-center space-x-4">
-                    <div class="text-right"><div class="text-sm font-medium text-gray-800" id="userDisplay"></div><div class="text-xs text-gray-500" id="roleDisplay"></div></div>
-                    <button onclick="logout()" class="text-gray-500 hover:text-red-500 p-2 rounded-lg"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg></button>
-                </div>
-            </div>
-        </div>
-    </nav>
-    <main>
-        <div id="dashboardPage" class="page-content max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8"></div>
-        <div id="calendarPage" class="page-content max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 hidden"></div>
-        <div id="scheduleFormPage" class="page-content max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 hidden"></div>
-        <div id="activityPage" class="page-content max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 hidden"></div>
-    </main>
-    <div id="eventModal" class="modal fixed inset-0 bg-black bg-opacity-50 items-center justify-center p-4 z-50"><div class="bg-white rounded-lg p-6 w-full max-w-lg fade-in"><div class="flex justify-between items-center mb-4 pb-4 border-b"><h3 id="modalTitle" class="text-xl font-bold text-gray-800">รายละเอียดงาน</h3><button id="closeModalBtn" class="text-gray-500 hover:text-black text-2xl">&times;</button></div><div id="modalContent" class="space-y-4 max-h-[70vh] overflow-y-auto pr-2"></div></div></div>
-    <div id="editModal" class="modal fixed inset-0 bg-black bg-opacity-50 items-center justify-center p-4 z-50"><div class="bg-white rounded-lg p-6 w-full max-w-4xl fade-in"><div class="flex justify-between items-center mb-4"><h3 class="text-xl font-bold">แก้ไขตารางงาน</h3><button id="closeEditModalBtn" class="text-gray-500 hover:text-black text-2xl">&times;</button></div><form id="editScheduleForm" class="space-y-6"></form></div></div>
-</div>
+    <div id="mainApp" class="hidden">
+        <nav class="bg-white shadow-sm border-b"><div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8"><div class="flex justify-between items-center h-16"><div class="flex items-center space-x-8"><span class="text-xl font-bold text-gray-800">Work Tracker</span><div id="main-nav-links" class="hidden md:flex space-x-6"><button onclick="showPage('dashboard', this)" class="nav-btn text-gray-700 px-3 py-2 rounded-lg">ภาพรวม</button><button onclick="showPage('calendar', this)" class="nav-btn text-gray-700 px-3 py-2 rounded-lg">ปฏิทิน</button><button onclick="showPage('scheduleForm', this)" class="nav-btn text-gray-700 px-3 py-2 rounded-lg">ลงเวลาปฏิบัติงาน</button><button id="activity-log-nav" onclick="showPage('activity', this)" class="nav-btn text-gray-700 px-3 py-2 rounded-lg">Activity Log</button></div></div><div class="flex items-center space-x-4"><div class="text-right"><div class="text-sm font-medium text-gray-800" id="userDisplay"></div><div class="text-xs text-gray-500" id="roleDisplay"></div></div><button onclick="logout()" class="text-gray-500 hover:text-red-500 p-2 rounded-lg" title="ออกจากระบบ"><i class="fa-solid fa-right-from-bracket"></i></button></div></div></div></nav>
+        <main>
+            <div id="dashboardPage" class="page-content max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8"></div>
+            <div id="calendarPage" class="page-content max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 hidden"></div>
+            <div id="scheduleFormPage" class="page-content max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 hidden"></div>
+            <div id="activityPage" class="page-content max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 hidden"></div>
+        </main>
+        <div id="eventModal" class="modal fixed inset-0 bg-black bg-opacity-50 items-center justify-center p-4 z-50"><div class="bg-white rounded-lg p-6 w-full max-w-lg fade-in"><div class="flex justify-between items-center mb-4 pb-4 border-b"><h3 id="modalTitle" class="text-xl font-bold text-gray-800"></h3><button id="closeModalBtn" class="text-gray-500 hover:text-black text-2xl">&times;</button></div><div id="modalContent" class="space-y-4 max-h-[70vh] overflow-y-auto pr-2"></div></div></div>
+    </div>
 
 <script>
 // ####################################################################
-// ##  สำคัญ! วาง URL ของคุณที่นี่ (URL เดิมจาก v4.0)   ##
+// ##  สำคัญ! วาง URL ใหม่ล่าสุดที่ได้จากการ DEPLOY ของคุณที่นี่   ##
 // ####################################################################
-const SCRIPT_URL = 'https://script.google.com/a/macros/srisawadpower.com/s/AKfycbyNyMr1IlcNVxDLkn4UgxiFNZd2KpdrFPc65BqYvxpgUqgfXCAn_UrSxN71hoTXFgcj/exec'; 
+const SCRIPT_URL = 'https://script.google.com/a/macros/srisawadpower.com/s/AKfycbyxsymMu9b_PYJyUNLhAc7Z7XlFvalp8-2I7WweOKYSWc_Fz3mK_l_JU1zAjMefwqU/exec'; 
 // ####################################################################
 
 let currentUser=null,fullCalendarInstance=null,masterData={schedules:[],branches:[],users:[]};
@@ -101,13 +55,7 @@ const script=document.createElement('script'),callbackName='jsonp_callback_'+Mat
 const stringToColor=(str)=>{if(!str)return'#808080';let hash=0;for(let i=0;i<str.length;i++){hash=str.charCodeAt(i)+((hash<<5)-hash)}
 let color='#';for(let i=0;i<3;i++){const value=(hash>>(i*8))&0xFF;color+=('00'+value.toString(16)).substr(-2)}
 return color};
-const formatDateForDisplay = (isoDateString) => {
-    if (!isoDateString || isoDateString.length < 10) return "Invalid Date";
-    const parts = isoDateString.slice(0, 10).split('-');
-    if (parts.length !== 3) return "Invalid Date";
-    const [year, month, day] = parts;
-    return `${day}/${month}/${parseInt(year)+543}`;
-};
+const formatDateForDisplay=(isoDateString)=>{if(!isoDateString||isoDateString.length<10)return"Invalid Date";const date=new Date(isoDateString+'T00:00:00');if(isNaN(date.getTime()))return"Invalid Date";return date.toLocaleDateString('th-TH',{day:'2-digit',month:'2-digit',year:'numeric'})};
 async function handleLogin(e){e.preventDefault();const loginBtn=document.getElementById('loginBtn'),loginText=document.getElementById('loginText'),loginSpinner=document.getElementById('loginSpinner'),loginError=document.getElementById('loginError');loginText.classList.add('hidden');loginSpinner.classList.remove('hidden');loginBtn.disabled=true;loginError.classList.add('hidden');try{const username=document.getElementById('username').value,password=document.getElementById('password').value,response=await apiGet({action:'login',username:username,password:password});currentUser=response.user;sessionStorage.setItem('currentUser',JSON.stringify(currentUser));initializeApp()}catch(error){loginError.textContent='ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง';loginError.classList.remove('hidden')}finally{loginText.classList.remove('hidden');loginSpinner.classList.add('hidden');loginBtn.disabled=false}}
 async function initializeApp(){document.getElementById('userDisplay').textContent=currentUser.fullName;document.getElementById('roleDisplay').textContent=currentUser.role;if(currentUser.role.toLowerCase()==='employee'){document.getElementById('activity-log-nav').style.display='none'}
 document.getElementById('loginPage').classList.add('hidden');document.getElementById('mainApp').classList.remove('hidden');await refreshDataAndShowPage('dashboard')}
@@ -122,9 +70,9 @@ function getUniqueColumnValues(data,colIndex){const values=[...new Set(data.map(
 function renderDashboardTable(data){const tableBody=document.getElementById('dashboard-table-body');updateStatsCards(data);if(data.length===0){tableBody.innerHTML=`<tr><td colspan="6" class="p-6 text-center text-gray-500">ไม่พบข้อมูลตามเงื่อนไข</td></tr>`;return}
 tableBody.innerHTML=data.map(row=>{const[id,ts,user,date,st,et,branch,details,status,area,region,nickname]=row;return`<tr><td class="p-3 text-sm">${formatDateForDisplay(date)}</td><td class="p-3 text-sm">${nickname}</td><td class="p-3 text-sm">${branch}</td><td class="p-3 text-sm">${area}</td><td class="p-3 text-sm">${region}</td><td class="p-3 text-sm text-center">...</td></tr>`}).join('')}
 function updateStatsCards(data){const container=document.getElementById('stats-cards');container.innerHTML=`<div class="bg-blue-100 p-4 rounded-lg"><p class="text-sm text-blue-800">แผนงาน (ที่แสดง)</p><p class="text-2xl font-bold text-blue-900">${data.length}</p></div><div class="bg-green-100 p-4 rounded-lg"><p class="text-sm text-green-800">จำนวนสาขา (ที่แสดง)</p><p class="text-2xl font-bold text-green-900">${new Set(data.map(r=>r[6])).size}</p></div><div class="bg-yellow-100 p-4 rounded-lg"><p class="text-sm text-yellow-800">จำนวนพนักงาน (ที่แสดง)</p><p class="text-2xl font-bold text-yellow-900">${new Set(data.map(r=>r[11])).size}</p></div>`}
-function initCalendarPage(){const calendarEl=document.getElementById('calendar');const events=masterData.schedules.map(row=>{const[id,ts,user,date,st,et,branch,details,status,area,region,nickname]=row;return{id,start:date,extendedProps:{user,nickname,workDate:date,startTime:st,endTime:et,branch,area,region}}});fullCalendarInstance=new FullCalendar.Calendar(calendarEl,{locale:'th',initialView:'dayGridMonth',headerToolbar:{left:'prev,next today',center:'title',right:'dayGridMonth,timeGridWeek,listWeek'},events:events,eventClick:(info)=>showCalendarEventModal(info.event),eventContent:(arg)=>{const props=arg.event.extendedProps;const timeText=props.startTime?props.startTime.replace(':00',''):'';const dotColor=stringToColor(props.user);const titleHtml=`<div class="fc-event-main"><span class="fc-event-dot" style="background-color:${dotColor}"></span><span class="fc-event-time">${timeText}</span><span class="fc-event-title">${props.nickname} : ${props.branch}</span></div>`;return{html:titleHtml}}});fullCalendarInstance.render();const userFilter=document.getElementById('calendar-user-filter'),filterContainer=document.getElementById('calendar-filter-container');if(currentUser.role.toLowerCase()!=='employee'&&masterData.users.length>0){userFilter.innerHTML+=masterData.users.map(u=>`<option value="${u.username}">${u.nickname}</option>`).join('');filterContainer.classList.remove('hidden');userFilter.addEventListener('change',()=>{const selectedUser=userFilter.value;const filteredEvents=selectedUser==='all'?events:events.filter(e=>e.extendedProps.user===selectedUser);fullCalendarInstance.removeAllEvents();fullCalendarInstance.addEventSource(filteredEvents)})}
-const modal=document.getElementById('eventModal');document.getElementById('closeModalBtn').addEventListener('click',()=>modal.classList.remove('is-active'));modal.addEventListener('click',e=>{if(e.target===modal)modal.classList.remove('is-active')})}
-function showCalendarEventModal(event){const modal=document.getElementById('eventModal'),modalTitle=document.getElementById('modalTitle'),modalContent=document.getElementById('modalContent'),props=event.extendedProps,formattedDate=formatDateForDisplay(props.workDate);const startTime=props.startTime?props.startTime.replace(':00',''):'',endTime=props.endTime?props.endTime.replace(':00',''):'';modalTitle.textContent=`${props.nickname} - ${props.branch}`;modalContent.innerHTML=`<div class="grid grid-cols-3 gap-x-4 gap-y-2 text-sm"><div class="text-gray-500">ชื่อเล่น:</div><div class="font-semibold col-span-2">${props.nickname}</div><div class="text-gray-500">วันที่:</div><div class="font-semibold col-span-2">${formattedDate}</div><div class="text-gray-500">เวลา:</div><div class="font-semibold col-span-2">${startTime} - ${endTime}</div><div class="text-gray-500">สาขา:</div><div class="font-semibold col-span-2">${props.branch}</div><div class="text-gray-500">เขต:</div><div class="font-semibold col-span-2">${props.area}</div><div class="text-gray-500">ภาค:</div><div class="font-semibold col-span-2">${props.region}</div></div>`}
+function initCalendarPage(){const calendarEl=document.getElementById('calendar');const events=masterData.schedules.map(row=>{const[id,ts,user,date,st,et,branch,details,status,area,region,nickname]=row;return{id,start:date,extendedProps:{user,nickname,workDate:date,startTime:st,endTime:et,branch,area,region}}});fullCalendarInstance=new FullCalendar.Calendar(calendarEl,{locale:'th',initialView:'dayGridMonth',headerToolbar:{left:'prev,next today',center:'title',right:'dayGridMonth,timeGridWeek,listWeek'},events:events,eventDisplay:'block',eventContent:arg=>{const props=arg.event.extendedProps;const timeText=props.startTime?props.startTime.replace(':00',''):'';const dotColor=stringToColor(props.user);const titleHtml=`<div class="fc-event-main-frame" title="${timeText} ${props.nickname} : ${props.branch}"><span class="fc-event-dot" style="background-color:${dotColor}"></span><span class="fc-event-time">${timeText}</span><div class="fc-event-title-container"><span>${props.nickname} : ${props.branch}</span></div></div>`;return{html:titleHtml}},eventClick:info=>showCalendarEventModal(info.event.extendedProps)});const userFilter=document.getElementById('calendar-user-filter'),filterContainer=document.getElementById('calendar-filter-container');if(currentUser.role.toLowerCase()!=='employee'&&masterData.users.length>0){userFilter.innerHTML+=masterData.users.map(u=>`<option value="${u.username}">${u.nickname}</option>`).join('');filterContainer.classList.remove('hidden');userFilter.addEventListener('change',()=>{const selectedUser=userFilter.value;const filteredEvents=selectedUser==='all'?events:events.filter(e=>e.extendedProps.user===selectedUser);fullCalendarInstance.removeAllEvents();fullCalendarInstance.addEventSource(filteredEvents)})}
+fullCalendarInstance.render();const modal=document.getElementById('eventModal');document.getElementById('closeModalBtn').addEventListener('click',()=>modal.classList.remove('is-active'));modal.addEventListener('click',e=>{if(e.target===modal)modal.classList.remove('is-active')})}
+function showCalendarEventModal(props){const modal=document.getElementById('eventModal'),modalTitle=document.getElementById('modalTitle'),modalContent=document.getElementById('modalContent');const formattedDate=formatDateForDisplay(props.workDate);const startTime=props.startTime?props.startTime.replace(':00',''):'',endTime=props.endTime?props.endTime.replace(':00',''):'';modalTitle.textContent=`${props.nickname} - ${props.branch}`;modalContent.innerHTML=`<div class="grid grid-cols-3 gap-x-4 gap-y-2 text-sm"><div class="text-gray-500">ชื่อเล่น:</div><div class="font-semibold col-span-2">${props.nickname}</div><div class="text-gray-500">วันที่:</div><div class="font-semibold col-span-2">${formattedDate}</div><div class="text-gray-500">เวลา:</div><div class="font-semibold col-span-2">${startTime} - ${endTime}</div><div class="text-gray-500">สาขา:</div><div class="font-semibold col-span-2">${props.branch}</div><div class="text-gray-500">เขต:</div><div class="font-semibold col-span-2">${props.area}</div><div class="text-gray-500">ภาค:</div><div class="font-semibold col-span-2">${props.region}</div></div>`;modal.classList.add('is-active')}
 function initScheduleFormPage(){document.getElementById('scheduleUsername').value=currentUser.username;document.getElementById('scheduleDate').valueAsDate=new Date;const branchSelect=document.getElementById('scheduleBranch');const branchMap=new Map(masterData.branches.map(b=>[b[0],{area:b[1],region:b[2]}]));branchSelect.innerHTML+=masterData.branches.map(b=>`<option value="${b[0]}">${b[0]}</option>`).join('');branchSelect.addEventListener('change',e=>{const info=branchMap.get(e.target.value);document.getElementById('scheduleArea').value=info?info.area:'';document.getElementById('scheduleRegion').value=info?info.region:''});document.getElementById('scheduleForm').addEventListener('submit',handleSaveSchedule)}
 async function handleSaveSchedule(e){e.preventDefault();const btn=document.getElementById('saveScheduleBtn'),successMsg=document.getElementById('scheduleSuccess');const payload={username:currentUser.username,workDate:document.getElementById('scheduleDate').value,startTime:document.getElementById('scheduleStartTime').value,endTime:document.getElementById('scheduleEndTime').value,branch:document.getElementById('scheduleBranch').value,details:document.getElementById('scheduleDetails').value,area:document.getElementById('scheduleArea').value,region:document.getElementById('scheduleRegion').value};btn.disabled=true;btn.textContent='กำลังบันทึก...';try{await apiGet({action:'saveSchedule',payload});successMsg.textContent='บันทึกเรียบร้อย!';successMsg.classList.remove('hidden');setTimeout(()=>successMsg.classList.add('hidden'),3000);await refreshDataAndShowPage('dashboard')}catch(error){alert('เกิดข้อผิดพลาด: '+error.message)}finally{btn.disabled=false;btn.textContent='บันทึก'}}
 async function loadActivityLogs(){const tableBody=document.getElementById('activityTableBody');tableBody.innerHTML=`<tr><td colspan="3" class="p-6 text-center text-gray-500"><i class="fas fa-spinner fa-spin mr-2"></i>Loading...</td></tr>`;try{const response=await apiGet({action:'getActivityLogs'});tableBody.innerHTML=response.data.length===0?`<tr><td colspan="3" class="p-6 text-center text-gray-500">ไม่พบข้อมูล</td></tr>`:response.data.map(([ts,user,act])=>`<tr><td class="p-3 text-sm">${ts}</td><td class="p-3 text-sm">${user}</td><td class="p-3 text-sm">${act}</td></tr>`).join('')}catch(error){tableBody.innerHTML=`<tr><td colspan="3" class="p-6 text-center text-red-500">โหลดข้อมูลล้มเหลว</td></tr>`}}
