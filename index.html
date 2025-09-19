@@ -6,11 +6,12 @@
     <title>Employee Work Tracker</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css">
+    <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js'></script>
     <script>
         tailwind.config = { theme: { extend: { colors: { primary: '#3B82F6', secondary: '#10B981', accent: '#F3F4F6' } } } }
     </script>
     <style>
-        .fade-in{animation:fadeIn .3s ease-in}@keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}.loading{animation:spin 1s linear infinite}@keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}.modal{display:none}.modal.is-active{display:flex}.dense-table td,.dense-table th{padding:.5rem .75rem}
+        .fade-in{animation:fadeIn .3s ease-in}@keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}.loading{animation:spin 1s linear infinite}@keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}.modal{display:none}.modal.is-active{display:flex}.dense-table td,.dense-table th{padding:.5rem .75rem}:root{--fc-border-color:#e5e7eb;--fc-list-event-hover-bg-color:#f9fafb;--fc-event-border-radius:4px;--fc-event-font-size:.8em;--fc-event-padding-block:2px;--fc-event-padding-inline:6px}.fc .fc-toolbar-title{font-size:1.5rem;font-weight:600}.fc .fc-button-primary{background-color:#fff;border-color:#d1d5db;color:#374151}.fc .fc-button-primary:hover{background-color:#f9fafb}.fc .fc-button-primary:active,.fc .fc-button-primary:focus{box-shadow:none}.fc .fc-button-primary.fc-button-active{background-color:#EFF6FF;border-color:#3B82F6;color:#3B82F6}.fc .fc-day-today{background-color:#f9fafb!important}.fc .fc-event{border-width:1px!important;color:#fff!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.table-filter-icon{cursor:pointer;color:#9ca3af;transition:color .2s}.table-filter-icon:hover{color:#3B82F6}
     </style>
 </head>
 <body class="bg-gray-50 font-sans">
@@ -32,7 +33,7 @@
             </form>
             <div id="loginError" class="mt-4 p-3 bg-red-100 text-red-700 rounded-xl hidden"></div>
         </div>
-        <p class="text-center text-xs text-gray-400 mt-4">Version 3.2 (Final & Complete)</p>
+        <p class="text-center text-xs text-gray-400 mt-4">Version 4.0 (Final)</p>
     </div>
 
 <!-- Main App -->
@@ -65,56 +66,29 @@
         <div id="scheduleFormPage" class="page-content max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 hidden"></div>
         <div id="activityPage" class="page-content max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 hidden"></div>
     </main>
+    <div id="eventModal" class="modal fixed inset-0 bg-black bg-opacity-50 items-center justify-center p-4 z-50"><div class="bg-white rounded-lg p-6 w-full max-w-lg fade-in"><div class="flex justify-between items-center mb-4 pb-4 border-b"><h3 id="modalTitle" class="text-xl font-bold text-gray-800">รายละเอียดงาน</h3><button id="closeModalBtn" class="text-gray-500 hover:text-black text-2xl">&times;</button></div><div id="modalContent" class="space-y-4 max-h-[70vh] overflow-y-auto pr-2"></div></div></div>
 </div>
 
 <script>
 // ####################################################################
 // ##  สำคัญ! วาง URL ใหม่ล่าสุดที่ได้จากการ DEPLOY ของคุณที่นี่   ##
 // ####################################################################
-const SCRIPT_URL = 'https://script.google.com/a/macros/srisawadpower.com/s/AKfycbzRrPppv1p4jnqhFEu7v8xo7UV1x4iRdhZr6487mvgHa-JKFSe1kGMp8HPjxQTtP6wE/exec'; 
+const SCRIPT_URL = 'https://script.google.com/a/macros/srisawadpower.com/s/AKfycbyNyMr1IlcNVxDLkn4UgxiFNZd2KpdrFPc65BqYvxpgUqgfXCAn_UrSxN71hoTXFgcj/exec'; 
 // ####################################################################
 
 let currentUser = null;
-let masterScheduleData = [];
-const branchInfoMap = new Map();
+let masterData = { schedules: [], branches: [], users: [] };
+let fullCalendarInstance = null;
 
 // --- UTILITIES & API ---
-function apiGet(params) {
-    return new Promise((resolve, reject) => {
-        const url = new URL(SCRIPT_URL);
-        if (currentUser) {
-            params.username = currentUser.username;
-            params.role = currentUser.role;
-        }
-        // Use JSON.stringify for payload
-        if (params.payload) {
-            params.payload = JSON.stringify(params.payload);
-        }
-
-        const script = document.createElement('script');
-        const callbackName = 'jsonp_callback_' + Math.round(1e5 * Math.random());
-        url.searchParams.append('callback', callbackName);
-        Object.keys(params).forEach(key => url.searchParams.append(key, params[key]));
-        
-        window[callbackName] = (data) => {
-            delete window[callbackName];
-            document.body.removeChild(script);
-            if (data.status === 'success') {
-                resolve(data);
-            } else {
-                reject(new Error(data.message || 'API Error'));
-            }
-        };
-        
-        script.src = url;
-        script.onerror = () => {
-            delete window[callbackName];
-            document.body.removeChild(script);
-            reject(new Error('Network or CORS error. Check deployment permissions.'));
-        };
-        document.body.appendChild(script);
-    });
+function apiGet(params) { /* ... Same as before ... */
+    return new Promise((resolve,reject)=>{const url=new URL(SCRIPT_URL);if(currentUser){params.username=currentUser.username;params.role=currentUser.role}
+    if(params.payload){params.payload=JSON.stringify(params.payload)}
+    const script=document.createElement('script'),callbackName='jsonp_callback_'+Math.round(1e5*Math.random());url.searchParams.append('callback',callbackName);Object.keys(params).forEach(key=>url.searchParams.append(key,params[key]));window[callbackName]=data=>{delete window[callbackName];document.body.removeChild(script);if(data.status==='success'){resolve(data)}else{reject(new Error(data.message||'API Error'))}};script.src=url;script.onerror=()=>{delete window[callbackName];document.body.removeChild(script);reject(new Error('Network or CORS error.'))};document.body.appendChild(script)})
 }
+const stringToColor=(str)=>{let hash=0;for(let i=0;i<str.length;i++){hash=str.charCodeAt(i)+((hash<<5)-hash)}
+let color='#';for(let i=0;i<3;i++){const value=(hash>>(i*8))&0xFF;color+=('00'+value.toString(16)).substr(-2)}
+return color};
 
 // --- AUTH & INITIALIZATION ---
 document.addEventListener('DOMContentLoaded', () => {
@@ -163,14 +137,8 @@ async function refreshDataAndShowPage(pageId) {
     const loadingContainer = document.getElementById('dashboardPage');
     loadingContainer.innerHTML = `<div class="text-center p-8 text-gray-500"><i class="fas fa-spinner fa-spin mr-2"></i>กำลังโหลดข้อมูล...</div>`;
     try {
-        const [scheduleResponse, branchResponse] = await Promise.all([
-            apiGet({ action: 'getAllSchedules' }),
-            apiGet({ action: 'getBranchData' })
-        ]);
-        masterScheduleData = scheduleResponse.data;
-        branchResponse.data.forEach(([branchName, area, region]) => {
-            branchInfoMap.set(branchName, { area, region });
-        });
+        const response = await apiGet({ action: 'getInitialData' });
+        masterData = response.data;
         showPage(pageId || 'dashboard', document.querySelector('.nav-btn'));
     } catch (error) {
         alert('ไม่สามารถโหลดข้อมูลเริ่มต้นได้: ' + error.message);
@@ -191,131 +159,204 @@ function showPage(pageId, element) {
     pageContainer.innerHTML = getPageHTML(pageId);
 
     switch (pageId) {
-        case 'dashboard': renderDashboard(); break;
-        case 'calendar': renderCalendar(); break;
+        case 'dashboard': initDashboardPage(); break;
+        case 'calendar': initCalendarPage(); break;
         case 'scheduleForm': initScheduleFormPage(); break;
         case 'activity': loadActivityLogs(); break;
     }
 }
 
 function getPageHTML(pageId) {
-    const templates = {
-        dashboard: `<div class="fade-in"><h1 class="text-2xl font-bold text-gray-800 mb-4">ภาพรวมตารางงาน</h1><div class="bg-white rounded-lg shadow-sm border p-4"><div class="flex justify-end mb-4"><input type="month" id="month-filter" class="p-2 border rounded-md"></div><div class="overflow-x-auto"><table class="w-full dense-table"><thead class="bg-gray-50"><tr><th class="p-3 text-left text-xs font-medium uppercase">วันที่</th><th class="p-3 text-left text-xs font-medium uppercase">พนักงาน</th><th class="p-3 text-left text-xs font-medium uppercase">สาขา</th><th class="p-3 text-left text-xs font-medium uppercase">เขต</th><th class="p-3 text-left text-xs font-medium uppercase">ภาค</th></tr></thead><tbody id="dashboard-table-body" class="divide-y divide-gray-200"></tbody></table></div></div></div>`,
-        calendar: `<div class="fade-in"><div class="flex flex-col sm:flex-row justify-between items-center mb-4"><h1 class="text-2xl font-bold text-gray-800" id="calendar-title"></h1><div class="flex items-center gap-2 mt-4 sm:mt-0"><button id="cal-prev" class="p-2 hover:bg-gray-100 rounded-md"><i class="fas fa-chevron-left"></i></button><button id="cal-today" class="px-4 py-2 text-sm font-semibold border rounded-md hover:bg-gray-100">วันนี้</button><button id="cal-next" class="p-2 hover:bg-gray-100 rounded-md"><i class="fas fa-chevron-right"></i></button></div></div><div class="bg-white rounded-lg shadow-sm border p-4"><div id="calendar-grid" class="grid grid-cols-7 gap-px bg-gray-200 border-t border-l"></div></div></div>`,
-        scheduleForm: `<div class="fade-in"><h1 class="text-3xl font-bold text-gray-800 mb-8">ลงเวลาปฏิบัติงาน</h1><div class="bg-white rounded-2xl shadow-sm border p-6 mb-8"><h2 class="text-xl font-bold text-gray-800 mb-6">สร้างตารางงานใหม่</h2><form id="scheduleForm" class="space-y-6"><div class="grid grid-cols-1 md:grid-cols-2 gap-6"><div><label for="scheduleDate" class="block text-sm font-medium">วันที่ปฏิบัติงาน</label><input type="date" id="scheduleDate" class="w-full mt-1 p-2 border rounded-md" required></div><div><label for="scheduleUsername" class="block text-sm font-medium">Username</label><input type="text" id="scheduleUsername" class="w-full mt-1 p-2 border bg-gray-100 rounded-md" readonly></div></div><div class="grid grid-cols-1 md:grid-cols-2 gap-6"><div><label for="scheduleStartTime" class="block text-sm font-medium">เวลาเริ่มงาน</label><input type="time" id="scheduleStartTime" class="w-full mt-1 p-2 border rounded-md" required></div><div><label for="scheduleEndTime" class="block text-sm font-medium">เวลาเลิกงาน</label><input type="time" id="scheduleEndTime" class="w-full mt-1 p-2 border rounded-md" required></div></div><div><label for="scheduleBranch" class="block text-sm font-medium">สาขาที่เข้าปฏิบัติงาน</label><input list="branch-list" id="scheduleBranch" class="w-full mt-1 p-2 border rounded-md" placeholder="พิมพ์เพื่อค้นหา..." required><datalist id="branch-list"></datalist></div><div class="grid grid-cols-1 md:grid-cols-2 gap-6"><div><label for="scheduleArea" class="block text-sm font-medium">เขต</label><input type="text" id="scheduleArea" class="w-full mt-1 p-2 border bg-gray-100 rounded-md" readonly></div><div><label for="scheduleRegion" class="block text-sm font-medium">ภาค</label><input type="text" id="scheduleRegion" class="w-full mt-1 p-2 border bg-gray-100 rounded-md" readonly></div></div><div class="flex justify-end"><button type="submit" id="saveScheduleBtn" class="px-6 py-3 bg-primary text-white rounded-xl">บันทึก</button></div></form><div id="scheduleSuccess" class="mt-4 p-4 bg-green-100 text-green-700 rounded-xl hidden"></div></div></div>`,
+    return {
+        dashboard: `<div class="fade-in"><h1 class="text-2xl font-bold text-gray-800 mb-6">ภาพรวมตารางงาน</h1><div id="stats-cards" class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6"></div><div class="bg-white rounded-lg shadow-sm border overflow-hidden"><div class="p-4 border-b flex justify-between items-center"><h2 class="text-xl font-bold">ตารางงาน</h2><button id="refresh-button" class="text-primary hover:text-blue-600"><i class="fas fa-sync-alt mr-2"></i>รีเฟรช</button></div><div class="overflow-x-auto"><table class="w-full dense-table"><thead class="bg-gray-50"><tr id="header-row"></tr><tr id="filter-row" class="bg-gray-100"></tr></thead><tbody id="dashboard-table-body" class="divide-y divide-gray-200"></tbody></table></div></div></div>`,
+        calendar: `<div class="fade-in"><div class="flex flex-col sm:flex-row justify-between items-center mb-4"><h1 class="text-3xl font-bold text-gray-800">ปฏิทินทีม</h1><div id="calendar-filter-container" class="hidden mt-4 sm:mt-0"><select id="calendar-user-filter" class="p-2 border rounded-md"><option value="all">พนักงานทั้งหมด</option></select></div></div><div class="bg-white p-4 sm:p-6 rounded-2xl shadow-sm border"><div id="calendar"></div></div></div>`,
+        scheduleForm: `<div class="fade-in"><h1 class="text-3xl font-bold text-gray-800 mb-8">ลงเวลาปฏิบัติงาน</h1><div class="bg-white rounded-2xl shadow-sm border p-6 mb-8"><h2 class="text-xl font-bold text-gray-800 mb-6">สร้างตารางงานใหม่</h2><form id="scheduleForm" class="space-y-6"><div class="grid grid-cols-1 md:grid-cols-2 gap-6"><div><label for="scheduleDate" class="block text-sm font-medium">วันที่ปฏิบัติงาน</label><input type="date" id="scheduleDate" class="w-full mt-1 p-2 border rounded-md" required></div><div><label for="scheduleUsername" class="block text-sm font-medium">Username</label><input type="text" id="scheduleUsername" class="w-full mt-1 p-2 border bg-gray-100 rounded-md" readonly></div></div><div class="grid grid-cols-1 md:grid-cols-2 gap-6"><div><label for="scheduleStartTime" class="block text-sm font-medium">เวลาเริ่มงาน</label><input type="time" id="scheduleStartTime" class="w-full mt-1 p-2 border rounded-md" required></div><div><label for="scheduleEndTime" class="block text-sm font-medium">เวลาเลิกงาน</label><input type="time" id="scheduleEndTime" class="w-full mt-1 p-2 border rounded-md" required></div></div><div><label for="scheduleBranch" class="block text-sm font-medium">สาขา</label><select id="scheduleBranch" class="w-full mt-1 p-2 border rounded-md" required><option value="">เลือกสาขา...</option></select></div><div class="grid grid-cols-1 md:grid-cols-2 gap-6"><div><label class="block text-sm font-medium">เขต</label><input type="text" id="scheduleArea" class="w-full mt-1 p-2 border bg-gray-100 rounded-md" readonly></div><div><label class="block text-sm font-medium">ภาค</label><input type="text" id="scheduleRegion" class="w-full mt-1 p-2 border bg-gray-100 rounded-md" readonly></div></div><div><label for="scheduleDetails" class="block text-sm font-medium">รายละเอียดงาน</label><textarea id="scheduleDetails" rows="3" class="w-full mt-1 p-2 border rounded-md"></textarea></div><div class="flex justify-end"><button type="submit" id="saveScheduleBtn" class="px-6 py-3 bg-primary text-white rounded-xl">บันทึก</button></div></form><div id="scheduleSuccess" class="mt-4 p-4 bg-green-100 text-green-700 rounded-xl hidden"></div></div></div>`,
         activity: `<div class="fade-in"><h1 class="text-3xl font-bold text-gray-800 mb-8">Activity Log</h1><div class="bg-white rounded-2xl shadow-sm border overflow-hidden"><div class="overflow-x-auto"><table class="w-full"><thead class="bg-gray-50"><tr><th class="px-6 py-4 text-left text-xs font-medium uppercase">วัน-เวลา</th><th class="px-6 py-4 text-left text-xs font-medium uppercase">Username</th><th class="px-6 py-4 text-left text-xs font-medium uppercase">กิจกรรม</th></tr></thead><tbody id="activityTableBody" class="bg-white divide-y divide-gray-200"></tbody></table></div></div></div>`
-    };
-    return templates[pageId] || '';
+    }[pageId] || '';
 }
 
 // --- DASHBOARD PAGE ---
-function renderDashboard() {
-    const monthFilter = document.getElementById('month-filter');
-    monthFilter.value = new Date().toISOString().slice(0, 7);
-    const renderTable = () => {
-        const [year, month] = monthFilter.value.split('-').map(Number);
-        const filteredData = masterScheduleData.filter(row => {
-            if (!row[3]) return false;
-            const rowDate = new Date(row[3]);
-            return rowDate.getFullYear() === year && rowDate.getMonth() + 1 === month;
+function initDashboardPage() {
+    document.getElementById('refresh-button').addEventListener('click', () => refreshDataAndShowPage('dashboard'));
+    const filterConfig = [
+        { name: 'วันที่', col: 3, type: 'date' }, { name: 'พนักงาน', col: 11, type: 'select' },
+        { name: 'สาขา', col: 6, type: 'select' }, { name: 'เขต', col: 9, type: 'select' },
+        { name: 'ภาค', col: 10, type: 'select' }
+    ];
+
+    const headerRow = document.getElementById('header-row');
+    const filterRow = document.getElementById('filter-row');
+    headerRow.innerHTML = filterConfig.map(c => `<th class="p-3 text-left text-xs font-medium uppercase">${c.name}</th>`).join('') + `<th class="p-3 text-left text-xs font-medium uppercase">จัดการ</th>`;
+    
+    filterConfig.forEach(c => {
+        const th = document.createElement('th');
+        th.className = "p-2";
+        const filterEl = document.createElement('select');
+        filterEl.className = "w-full p-1 border rounded-md text-sm dashboard-filter";
+        filterEl.dataset.col = c.col;
+        th.appendChild(filterEl);
+        filterRow.appendChild(th);
+    });
+    filterRow.appendChild(document.createElement('th')); // Empty cell for "จัดการ"
+
+    const applyFilters = () => {
+        let currentData = masterData.schedules;
+        const activeFilters = {};
+        document.querySelectorAll('.dashboard-filter').forEach(select => {
+            if (select.value) activeFilters[select.dataset.col] = select.value;
         });
-        const tableBody = document.getElementById('dashboard-table-body');
-        tableBody.innerHTML = filteredData.length === 0 
-            ? `<tr><td colspan="5" class="p-6 text-center text-gray-500">ไม่พบข้อมูล</td></tr>`
-            : filteredData.map(row => {
-                const [id, ts, user, date, st, et, branch, d, s, area, region, nickname] = row;
-                return `<tr><td class="p-3 text-sm">${new Date(date).toLocaleDateString('th-TH')}</td><td class="p-3 text-sm">${nickname||''}</td><td class="p-3 text-sm">${branch||''}</td><td class="p-3 text-sm">${area||''}</td><td class="p-3 text-sm">${region||''}</td></tr>`;
-            }).join('');
+
+        // Apply filters in sequence
+        filterConfig.forEach(config => {
+            const select = filterRow.querySelector(`select[data-col='${config.col}']`);
+            const filterValue = select.value;
+            
+            // Update options of other filters based on the current selection
+            const dependentFilters = filterConfig.filter(f => f.col !== config.col);
+            dependentFilters.forEach(depConfig => {
+                const depSelect = filterRow.querySelector(`select[data-col='${depConfig.col}']`);
+                const currentDepValue = depSelect.value;
+                const options = getUniqueColumnValues(currentData, depConfig.col);
+                depSelect.innerHTML = `<option value="">ทั้งหมด</option>` + options.map(opt => `<option value="${opt}" ${opt === currentDepValue ? 'selected' : ''}>${opt}</option>`).join('');
+            });
+            
+            if (filterValue) {
+                currentData = currentData.filter(row => String(row[config.col]) === filterValue);
+            }
+        });
+        renderDashboardTable(currentData);
     };
-    monthFilter.addEventListener('change', renderTable);
-    renderTable();
+
+    filterConfig.forEach(config => {
+        const select = filterRow.querySelector(`select[data-col='${config.col}']`);
+        const options = getUniqueColumnValues(masterData.schedules, config.col);
+        select.innerHTML = `<option value="">ทั้งหมด</option>` + options.map(opt => `<option value="${opt}">${opt}</option>`).join('');
+        select.addEventListener('change', applyFilters);
+    });
+
+    // Set default filter to today and render
+    const today = new Date().toISOString().slice(0, 10);
+    const dateFilter = filterRow.querySelector('select[data-col="3"]');
+    if (dateFilter.querySelector(`option[value="${today}"]`)) {
+        dateFilter.value = today;
+    }
+    applyFilters();
+}
+
+function getUniqueColumnValues(data, colIndex) {
+    const values = [...new Set(data.map(row => row[colIndex]))];
+    if (colIndex === 3) return values.sort((a, b) => new Date(b) - new Date(a));
+    return values.sort();
+}
+
+function renderDashboardTable(data) {
+    const tableBody = document.getElementById('dashboard-table-body');
+    updateStatsCards(data);
+    if (data.length === 0) {
+        tableBody.innerHTML = `<tr><td colspan="6" class="p-6 text-center text-gray-500">ไม่พบข้อมูลตามเงื่อนไข</td></tr>`;
+        return;
+    }
+    tableBody.innerHTML = data.map(row => {
+        const [id, ts, user, date, st, et, branch, details, status, area, region, nickname] = row;
+        return `<tr><td class="p-3 text-sm">${new Date(date).toLocaleDateString('th-TH')}</td><td class="p-3 text-sm">${nickname}</td><td class="p-3 text-sm">${branch}</td><td class="p-3 text-sm">${area}</td><td class="p-3 text-sm">${region}</td><td class="p-3 text-sm text-center">...</td></tr>`;
+    }).join('');
+}
+
+function updateStatsCards(data){
+    const container=document.getElementById('stats-cards');
+    container.innerHTML=`<div class="bg-blue-100 p-4 rounded-lg"><p class="text-sm text-blue-800">แผนงาน (ที่แสดง)</p><p class="text-2xl font-bold text-blue-900">${data.length}</p></div><div class="bg-green-100 p-4 rounded-lg"><p class="text-sm text-green-800">จำนวนสาขา (ที่แสดง)</p><p class="text-2xl font-bold text-green-900">${new Set(data.map(r=>r[6])).size}</p></div><div class="bg-yellow-100 p-4 rounded-lg"><p class="text-sm text-yellow-800">จำนวนพนักงาน (ที่แสดง)</p><p class="text-2xl font-bold text-yellow-900">${new Set(data.map(r=>r[11])).size}</p></div>`;
 }
 
 // --- CALENDAR PAGE ---
-function renderCalendar() {
-    let currentDate = new Date();
-    const drawCalendar = () => {
-        const year = currentDate.getFullYear(), month = currentDate.getMonth();
-        document.getElementById('calendar-title').textContent = currentDate.toLocaleDateString('th-TH',{month:'long',year:'numeric'});
-        const calendarGrid = document.getElementById('calendar-grid');
-        calendarGrid.innerHTML = ['อา','จ','อ','พ','พฤ','ศ','ส'].map(d => `<div class="text-center font-semibold text-sm py-2 bg-gray-50 border-b border-r">${d}</div>`).join('');
-        
-        const firstDay = new Date(year, month, 1).getDay(), daysInMonth = new Date(year, month + 1, 0).getDate();
-        for (let i = 0; i < firstDay; i++) { calendarGrid.innerHTML += `<div class="bg-gray-50 border-b border-r"></div>`; }
+function initCalendarPage() {
+    const calendarEl = document.getElementById('calendar');
+    const events = masterData.schedules.map(row => {
+        const [id, ts, user, date, st, et, branch, details, status, area, region, nickname] = row;
+        return {
+            id: id, title: `${st} ${nickname}`, start: date,
+            backgroundColor: stringToColor(user), borderColor: stringToColor(user),
+            extendedProps: { nickname, date, startTime: st, endTime: et, branch, area, region }
+        };
+    });
 
-        for (let day = 1; day <= daysInMonth; day++) {
-            const date = new Date(year, month, day), dateString = date.toISOString().slice(0, 10);
-            const isToday = dateString === new Date().toISOString().slice(0, 10);
-            const dayEvents = masterScheduleData.filter(row => row[3] === dateString);
-            let eventsHtml = dayEvents.map(row => {
-                const [id, ts, user, d, st, et, branch, details, status, area, region, nickname] = row;
-                return `<div class="bg-blue-500 text-white rounded-sm px-2 py-1 text-xs mb-1 truncate" title="${st || ''} ${nickname || ''}: ${branch || ''}"><span class="font-semibold">${st || ''}</span> ${nickname || ''}</div>`;
-            }).join('');
-            calendarGrid.innerHTML += `<div class="bg-white min-h-[120px] p-2 border-b border-r relative"><span class="text-sm ${isToday ? 'bg-primary text-white rounded-full w-6 h-6 flex items-center justify-center font-bold' : ''}">${day}</span><div class="mt-2 space-y-1">${eventsHtml}</div></div>`;
-        }
-    };
-    document.getElementById('cal-prev').addEventListener('click', () => { currentDate.setMonth(currentDate.getMonth() - 1); drawCalendar(); });
-    document.getElementById('cal-next').addEventListener('click', () => { currentDate.setMonth(currentDate.getMonth() + 1); drawCalendar(); });
-    document.getElementById('cal-today').addEventListener('click', () => { currentDate = new Date(); drawCalendar(); });
-    drawCalendar();
+    fullCalendarInstance = new FullCalendar.Calendar(calendarEl, {
+        locale: 'th', initialView: 'dayGridMonth',
+        headerToolbar: { left: 'prev,next today', center: 'title', right: 'dayGridMonth,timeGridWeek,listWeek' },
+        events: events,
+        eventClick: (info) => showCalendarEventModal(info.event)
+    });
+    fullCalendarInstance.render();
+
+    const userFilter = document.getElementById('calendar-user-filter');
+    const filterContainer = document.getElementById('calendar-filter-container');
+    if (currentUser.role.toLowerCase() !== 'employee' && masterData.users.length > 0) {
+        userFilter.innerHTML += masterData.users.map(u => `<option value="${u.username}">${u.nickname}</option>`).join('');
+        filterContainer.classList.remove('hidden');
+        userFilter.addEventListener('change', () => {
+            const selectedUser = userFilter.value;
+            const filteredEvents = selectedUser === 'all'
+                ? events
+                : events.filter(e => masterData.schedules.find(s => s[0] === e.id)[2] === selectedUser);
+            fullCalendarInstance.removeAllEvents();
+            fullCalendarInstance.addEventSource(filteredEvents);
+        });
+    }
+
+    const modal=document.getElementById('eventModal');document.getElementById('closeModalBtn').addEventListener('click',()=>modal.classList.remove('is-active'));modal.addEventListener('click',e=>{if(e.target===modal)modal.classList.remove('is-active')});
 }
 
-// --- SCHEDULE FORM PAGE ---
+function showCalendarEventModal(event) {
+    const modal=document.getElementById('eventModal'),modalTitle=document.getElementById('modalTitle'),modalContent=document.getElementById('modalContent'),props=event.extendedProps,formattedDate=new Date(props.date+'T00:00:00').toLocaleDateString('th-TH',{year:'numeric',month:'long',day:'numeric'});
+    modalTitle.textContent=`${props.nickname} - ${props.branch}`;
+    modalContent.innerHTML=`<div class="grid grid-cols-3 gap-x-4 gap-y-2 text-sm"><div class="text-gray-500">ชื่อเล่น:</div><div class="font-semibold col-span-2">${props.nickname}</div><div class="text-gray-500">วันที่:</div><div class="font-semibold col-span-2">${formattedDate}</div><div class="text-gray-500">เวลา:</div><div class="font-semibold col-span-2">${props.startTime} - ${props.endTime}</div><div class="text-gray-500">สาขา:</div><div class="font-semibold col-span-2">${props.branch}</div><div class="text-gray-500">เขต:</div><div class="font-semibold col-span-2">${props.area}</div><div class="text-gray-500">ภาค:</div><div class="font-semibold col-span-2">${props.region}</div></div>`
+    modal.classList.add('is-active');
+}
+
+// --- SCHEDULE FORM & ACTIVITY LOG ---
 function initScheduleFormPage() {
     document.getElementById('scheduleUsername').value = currentUser.username;
     document.getElementById('scheduleDate').valueAsDate = new Date();
-    const dataList = document.getElementById('branch-list');
-    dataList.innerHTML = '';
-    branchInfoMap.forEach((value, key) => { dataList.innerHTML += `<option value="${key}">`; });
-    document.getElementById('scheduleBranch').addEventListener('input', (e) => {
-        const info = branchInfoMap.get(e.target.value);
+    const branchSelect = document.getElementById('scheduleBranch');
+    const branchMap = new Map(masterData.branches.map(b => [b[0], { area: b[1], region: b[2] }]));
+    
+    branchSelect.innerHTML += masterData.branches.map(b => `<option value="${b[0]}">${b[0]}</option>`).join('');
+    
+    branchSelect.addEventListener('change', (e) => {
+        const info = branchMap.get(e.target.value);
         document.getElementById('scheduleArea').value = info ? info.area : '';
         document.getElementById('scheduleRegion').value = info ? info.region : '';
     });
     document.getElementById('scheduleForm').addEventListener('submit', handleSaveSchedule);
 }
-
 async function handleSaveSchedule(e) {
     e.preventDefault();
-    const btn = document.getElementById('saveScheduleBtn');
-    const successMsg = document.getElementById('scheduleSuccess');
+    const btn = document.getElementById('saveScheduleBtn'), successMsg = document.getElementById('scheduleSuccess');
     const payload = {
-        username: currentUser.username,
-        workDate: document.getElementById('scheduleDate').value,
-        startTime: document.getElementById('scheduleStartTime').value,
-        endTime: document.getElementById('scheduleEndTime').value,
-        branch: document.getElementById('scheduleBranch').value,
-        area: document.getElementById('scheduleArea').value,
-        region: document.getElementById('scheduleRegion').value,
+        username: currentUser.username, workDate: document.getElementById('scheduleDate').value,
+        startTime: document.getElementById('scheduleStartTime').value, endTime: document.getElementById('scheduleEndTime').value,
+        branch: document.getElementById('scheduleBranch').value, details: document.getElementById('scheduleDetails').value,
+        area: document.getElementById('scheduleArea').value, region: document.getElementById('scheduleRegion').value,
     };
     btn.disabled = true; btn.textContent = 'กำลังบันทึก...';
     try {
         await apiGet({ action: 'saveSchedule', payload });
-        successMsg.textContent = 'บันทึกตารางงานเรียบร้อยแล้ว!';
-        successMsg.classList.remove('hidden');
-        document.getElementById('scheduleForm').reset();
-        setTimeout(() => successMsg.classList.add('hidden'), 4000);
-        await refreshDataAndShowPage('dashboard'); // Refresh all data
+        successMsg.textContent = 'บันทึกเรียบร้อย!'; successMsg.classList.remove('hidden');
+        setTimeout(()=>successMsg.classList.add('hidden'), 3000);
+        await refreshDataAndShowPage('dashboard');
     } catch(error) {
-        alert('เกิดข้อผิดพลาดในการบันทึก: ' + error.message);
+        alert('เกิดข้อผิดพลาด: ' + error.message);
     } finally {
         btn.disabled = false; btn.textContent = 'บันทึก';
     }
 }
-
-// --- ACTIVITY LOG PAGE ---
 async function loadActivityLogs() {
     const tableBody = document.getElementById('activityTableBody');
     tableBody.innerHTML = `<tr><td colspan="3" class="p-6 text-center text-gray-500"><i class="fas fa-spinner fa-spin mr-2"></i>Loading...</td></tr>`;
     try {
         const response = await apiGet({ action: 'getActivityLogs' });
-        if (response.data.length === 0) {
-            tableBody.innerHTML = `<tr><td colspan="3" class="p-6 text-center text-gray-500">ไม่พบข้อมูล</td></tr>`;
-        } else {
-            tableBody.innerHTML = response.data.map(([timestamp, username, action]) => {
-                return `<tr><td class="p-3 text-sm">${timestamp}</td><td class="p-3 text-sm">${username}</td><td class="p-3 text-sm">${action}</td></tr>`;
-            }).join('');
-        }
+        tableBody.innerHTML = response.data.length === 0 
+            ? `<tr><td colspan="3" class="p-6 text-center text-gray-500">ไม่พบข้อมูล</td></tr>`
+            : response.data.map(([ts, user, act]) => `<tr><td class="p-3 text-sm">${ts}</td><td class="p-3 text-sm">${user}</td><td class="p-3 text-sm">${act}</td></tr>`).join('');
     } catch(error) {
         tableBody.innerHTML = `<tr><td colspan="3" class="p-6 text-center text-red-500">โหลดข้อมูลล้มเหลว</td></tr>`;
     }
