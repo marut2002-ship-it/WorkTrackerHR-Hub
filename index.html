@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Employee Work Tracker</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css">
     <script>
         tailwind.config = { theme: { extend: { colors: { primary: '#3B82F6', secondary: '#10B981', accent: '#F3F4F6' } } } }
     </script>
@@ -68,14 +68,14 @@
         <div id="activityPage" class="page-content max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 hidden"></div>
     </main>
     
-    <div id="eventModal" class="modal fixed inset-0 bg-black bg-opacity-50 items-center justify-center p-4 z-50"><div class="bg-white rounded-lg p-6 w-full max-w-lg fade-in"><div class="flex justify-between items-center mb-4"><h3 id="modalDate" class="text-xl font-bold"></h3><button id="closeModalBtn" class="text-gray-500 hover:text-black text-2xl">&times;</button></div><div id="modalContent" class="space-y-3 max-h-96 overflow-y-auto"></div></div></div>
+    <div id="eventModal" class="modal fixed inset-0 bg-black bg-opacity-50 items-center justify-center p-4 z-50"><div class="bg-white rounded-lg p-6 w-full max-w-lg fade-in"><div class="flex justify-between items-center mb-4"><h3 id="modalDate" class="text-xl font-bold text-gray-800"></h3><button id="closeModalBtn" class="text-gray-500 hover:text-black text-2xl">&times;</button></div><div id="modalContent" class="space-y-4 max-h-[70vh] overflow-y-auto pr-2"></div></div></div>
     <div id="editModal" class="modal fixed inset-0 bg-black bg-opacity-50 items-center justify-center p-4 z-50"><div class="bg-white rounded-lg p-6 w-full max-w-4xl fade-in"><div class="flex justify-between items-center mb-4"><h3 class="text-xl font-bold">แก้ไขตารางงาน</h3><button id="closeEditModalBtn" class="text-gray-500 hover:text-black text-2xl">&times;</button></div><form id="editScheduleForm" class="space-y-6"></form></div></div>
 </div>
 
 <script>
-// ============== JAVASCRIPT LOGIC (SEPARATE FILE VERSION - TIME FIX) ==============
+// ============== JAVASCRIPT LOGIC (NO CHANGE IN CORE LOGIC, ONLY UI FUNCTIONS) ==============
 
-const SCRIPT_URL = 'https://script.google.com/a/macros/srisawadpower.com/s/AKfycbw7Hogu8UqYeCyUJtYX9yIjmUNVtZ9RBYWEfMCCTEqB2jyeWnUepkpX_97AfaGWZIZx/exec';
+const SCRIPT_URL = 'https://script.google.com/a/macros/srisawadpower.com/s/AKfycbxW9-wgOqIOPGOAZoqKnuNYDjnsoPsjFSO5WZLSD0hDXXDa1f3X2Qvkp3KwC5YMzPnq/exec';
 let currentUser = null;
 const branchInfoMap = new Map();
 let calendarEvents = [];
@@ -116,7 +116,148 @@ function apiGet(params) {
         document.body.appendChild(script);
     });
 }
+// ============== CALENDAR UI FUNCTIONS (UPDATED) ==============
 
+/**
+ * Renders the calendar grid with an improved UI.
+ * Highlights today's date, weekends, and styles events for better readability.
+ */
+function renderCalendar() {
+    const grid = document.getElementById('calendarGrid');
+    if (!grid) return;
+    
+    const hubFilter = document.getElementById('calendar-filter-hub')?.value;
+    let filteredEvents = calendarEvents;
+    if (hubFilter) {
+        filteredEvents = calendarEvents.filter(e => e[2] === hubFilter);
+    }
+    
+    const month = calendarCurrentDate.getMonth();
+    const year = calendarCurrentDate.getFullYear();
+    document.getElementById('cal-current').textContent = calendarCurrentDate.toLocaleStringDateString('th-TH', { month: 'long', year: 'numeric' });
+    
+    const firstDayOfMonth = new Date(year, month, 1).getDay();
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    
+    let html = `<div class="grid grid-cols-7 gap-1 text-center font-medium text-gray-500 mb-2 border-b pb-2">
+        <div class="text-red-500">อา</div><div>จ</div><div>อ</div><div>พ</div><div>พฤ</div><div>ศ</div><div class="text-red-500">ส</div>
+    </div>
+    <div class="grid grid-cols-7 gap-1">`;
+    
+    for (let i = 0; i < firstDayOfMonth; i++) {
+        html += `<div></div>`;
+    }
+    
+    for (let day = 1; day <= daysInMonth; day++) {
+        const date = new Date(year, month, day);
+        const dayEvents = filteredEvents.filter(e => new Date(e[3]).toDateString() === date.toDateString());
+        const isToday = new Date().toDateString() === date.toDateString();
+        const dayOfWeek = date.getDay();
+        const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
+
+        let cellBgClass = isWeekend ? 'bg-gray-50/50' : 'bg-white';
+        
+        html += `<div class="border rounded-lg p-2 min-h-[110px] cursor-pointer hover:bg-blue-50/50 transition-colors duration-200 ${cellBgClass}" onclick="showEventModal(null, '${date.toISOString()}')">
+            <div class="flex justify-end mb-1">`;
+
+        if (isToday) {
+            html += `<div class="w-7 h-7 flex items-center justify-center bg-primary text-white rounded-full font-bold">${day}</div>`;
+        } else {
+            html += `<div class="text-sm ${isWeekend ? 'text-gray-500' : 'text-gray-700'}">${day}</div>`;
+        }
+        
+        html += `</div><div class="text-left text-xs mt-1 space-y-1 overflow-hidden">`;
+        
+        dayEvents.slice(0, 3).forEach(event => {
+            html += `<div class="bg-blue-100 text-blue-800 rounded px-2 py-1 truncate text-xs font-medium" title="${event[11]}: ${event[6]}">
+                        <i class="fa-solid fa-circle fa-2xs mr-1"></i>${event[11]}
+                     </div>`;
+        });
+        
+        if (dayEvents.length > 3) {
+            html += `<div class="text-gray-500 text-center text-xs font-semibold mt-1">+${dayEvents.length - 3} เพิ่มเติม</div>`;
+        }
+        
+        html += `</div></div>`;
+    }
+    
+    html += `</div>`;
+    grid.innerHTML = html;
+}
+
+/**
+ * Shows a modal with event details for a specific day, using an improved card-based UI.
+ */
+async function showEventModal(id, dateString) {
+    const modal = document.getElementById('eventModal');
+    const modalDate = document.getElementById('modalDate');
+    const modalContent = document.getElementById('modalContent');
+    
+    modalContent.innerHTML = `<div class="p-4 text-center"><i class="fas fa-spinner fa-spin text-primary text-2xl"></i></div>`;
+    modal.classList.add('is-active');
+    
+    let dayEvents;
+    
+    if (id) {
+        try {
+            const response = await apiGet({ action: 'getScheduleById', payload: JSON.stringify({ id }) });
+            if (response.status === 'success') {
+                dayEvents = [response.data];
+                modalDate.textContent = new Date(response.data[3]).toLocaleDateString('th-TH', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+            } else {
+                modalContent.innerHTML = `<p class="text-red-500">${response.message}</p>`;
+                return;
+            }
+        } catch (e) {
+            modalContent.innerHTML = `<p class="text-red-500">เกิดข้อผิดพลาดในการโหลดข้อมูล</p>`;
+            return;
+        }
+    } else {
+        const date = new Date(dateString);
+        modalDate.textContent = date.toLocaleDateString('th-TH', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+        dayEvents = calendarEvents.filter(e => new Date(e[3]).toDateString() === date.toDateString());
+    }
+    
+    modalContent.innerHTML = '';
+    
+    if (dayEvents.length > 0) {
+        dayEvents.forEach(event => {
+            const [id, ts, user, date, startTime, endTime, branch, details, status, area, region, nickname] = event;
+            
+            modalContent.innerHTML += `
+            <div class="border border-gray-200 p-4 rounded-xl bg-white shadow-sm hover:shadow-md transition-shadow">
+                <div class="flex items-center mb-3 pb-3 border-b">
+                    <div class="w-10 h-10 bg-gradient-to-br from-primary to-secondary text-white rounded-full flex items-center justify-center mr-3 font-bold text-lg">
+                        ${nickname.charAt(0)}
+                    </div>
+                    <div>
+                        <p class="font-bold text-primary text-lg">${nickname}</p>
+                        <p class="text-sm text-gray-500 flex items-center">
+                            <i class="fa-solid fa-location-dot w-4 mr-1"></i>${branch}
+                        </p>
+                    </div>
+                </div>
+                <div class="space-y-2 text-sm">
+                    <div class="flex items-start">
+                        <i class="fa-regular fa-clock text-gray-400 w-5 text-center mt-1"></i>
+                        <span class="font-semibold text-gray-800 ml-2">${startTime} - ${endTime}</span>
+                    </div>
+                    <div class="flex items-start">
+                        <i class="fa-regular fa-file-lines text-gray-400 w-5 text-center mt-1"></i>
+                        <p class="text-gray-700 ml-2 whitespace-pre-wrap">${details || 'ไม่มีรายละเอียดเพิ่มเติม'}</p>
+                    </div>
+                </div>
+            </div>`;
+        });
+    } else {
+        modalContent.innerHTML = `<div class="text-center py-8">
+            <i class="fa-regular fa-calendar-check text-4xl text-gray-300 mb-4"></i>
+            <p class="text-gray-500">ไม่มีแผนงานสำหรับวันนี้</p>
+        </div>`;
+    }
+}
+
+// ============== ALL OTHER JS FUNCTIONS (UNCHANGED) ==============
 function checkSession(){const user=sessionStorage.getItem('currentUser');if(user){currentUser=JSON.parse(user);initializeApp()}}
 async function handleLogin(e){e.preventDefault();const loginBtn=document.getElementById('loginBtn');const loginText=document.getElementById('loginText');const loginSpinner=document.getElementById('loginSpinner');const loginError=document.getElementById('loginError');loginText.textContent='กำลังเข้าสู่ระบบ...';loginSpinner.classList.remove('hidden');loginBtn.disabled=true;loginError.classList.add('hidden');try{const username=document.getElementById('username').value;const password=document.getElementById('password').value;const response=await apiGet({action:'login',username:username,password:password});if(response.status==='success'){currentUser=response.user;sessionStorage.setItem('currentUser',JSON.stringify(currentUser));initializeApp()}else{throw new Error(response.message||'Login failed')}}catch(error){loginError.textContent='ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง หรือเกิดข้อผิดพลาดในการเชื่อมต่อ';loginError.classList.remove('hidden')}finally{loginText.textContent='เข้าสู่ระบบ';loginSpinner.classList.add('hidden');loginBtn.disabled=false}}
 function initializeApp(){document.getElementById('userDisplay').textContent=currentUser.fullName;const roleDisplay=document.getElementById('roleDisplay');if(currentUser.role.toLowerCase()==='employee'){roleDisplay.textContent='วิทยากรประจำพื้นที่';if(document.getElementById('activity-log-nav')){document.getElementById('activity-log-nav').style.display='none'}}else{roleDisplay.textContent=currentUser.role}
@@ -143,10 +284,6 @@ function initCalendarPage(){document.getElementById('cal-prev').addEventListener
 async function loadCalendarData(){document.getElementById('calendarGrid').innerHTML=`<div class="p-6 text-center text-gray-500"><i class="fas fa-spinner fa-spin mr-2"></i>กำลังโหลดปฏิทิน...</div>`;const hubSelect=document.getElementById('calendar-filter-hub');if(currentUser.role.toLowerCase()!=='employee'&&hubSelect){document.getElementById('calendar-user-filter-container').classList.remove('hidden');hubSelect.innerHTML='<option value="">พนักงานทั้งหมด</option>';try{const userResponse=await apiGet({action:'getAllUsers'});if(userResponse.status==='success'){userResponse.data.forEach(user=>{hubSelect.innerHTML+=`<option value="${user.username}">${user.nickname}</option>`})}}catch(e){console.error(e)}
 hubSelect.addEventListener('change',renderCalendar)}
 try{const response=await apiGet({action:'getSchedules',filters:null});if(response.status==='success'){calendarEvents=response.data;renderCalendar()}}catch(error){document.getElementById('calendarGrid').innerHTML=`<p class="text-red-500 p-4">Failed to load calendar events.</p>`}}
-function renderCalendar(){const grid=document.getElementById('calendarGrid');if(!grid)return;const hubFilter=document.getElementById('calendar-filter-hub')?.value;let filteredEvents=calendarEvents;if(hubFilter){filteredEvents=calendarEvents.filter(e=>e[2]===hubFilter)}
-const month=calendarCurrentDate.getMonth(),year=calendarCurrentDate.getFullYear();document.getElementById('cal-current').textContent=calendarCurrentDate.toLocaleDateString('th-TH',{month:'long',year:'numeric'});const firstDay=new Date(year,month,1).getDay(),daysInMonth=new Date(year,month+1,0).getDate();let html=`<div class="grid grid-cols-7 gap-1 text-center font-medium text-gray-500 mb-2"><div>อา</div><div>จ</div><div>อ</div><div>พ</div><div>พฤ</div><div>ศ</div><div>ส</div></div><div class="grid grid-cols-7 gap-1">`;for(let i=0;i<firstDay;i++)html+=`<div></div>`;for(let day=1;day<=daysInMonth;day++){const date=new Date(year,month,day);const dayEvents=filteredEvents.filter(e=>new Date(e[3]).toDateString()===date.toDateString());html+=`<div class="border rounded-lg p-2 min-h-[100px] cursor-pointer hover:bg-gray-100 ${new Date().toDateString()===date.toDateString()?'bg-blue-50':''}" onclick="showEventModal(null, '${date.toISOString()}')"><div class="text-sm ${new Date().toDateString()===date.toDateString()?'font-bold text-primary':''}">${day}</div><div class="text-xs mt-1 space-y-1 overflow-hidden">`;dayEvents.slice(0,3).forEach(event=>{html+=`<div class="bg-primary text-white rounded px-1 truncate" title="${event[11]}_${event[6]}">${event[11]}_${event[6]}</div>`});if(dayEvents.length>3)html+=`<div class="text-gray-500 text-center">+${dayEvents.length-3}</div>`;html+=`</div></div>`}html+=`</div>`;grid.innerHTML=html}
-async function showEventModal(id,dateString){const modal=document.getElementById('eventModal');const modalDate=document.getElementById('modalDate');const modalContent=document.getElementById('modalContent');modalContent.innerHTML=`<div class="p-4 text-center"><i class="fas fa-spinner fa-spin"></i></div>`;modal.classList.add('is-active');let dayEvents;if(id){try{const response=await apiGet({action:'getScheduleById',payload:JSON.stringify({id})});if(response.status==='success'){dayEvents=[response.data];modalDate.textContent=new Date(response.data[3]).toLocaleDateString('th-TH',{weekday:'long',year:'numeric',month:'long',day:'numeric'})}else{modalContent.innerHTML=`<p class="text-red-500">ไม่พบข้อมูล</p>`;return}}catch(e){modalContent.innerHTML=`<p class="text-red-500">เกิดข้อผิดพลาด</p>`;return}}else{const date=new Date(dateString);modalDate.textContent=date.toLocaleDateString('th-TH',{weekday:'long',year:'numeric',month:'long',day:'numeric'});dayEvents=calendarEvents.filter(e=>new Date(e[3]).toDateString()===date.toDateString())}
-modalContent.innerHTML='';if(dayEvents.length>0){dayEvents.forEach(event=>{modalContent.innerHTML+=`<div class="border p-4 rounded-lg bg-gray-50"><div class="flex items-center mb-2"><span class="font-semibold text-lg text-primary">${event[11]}</span><span class="mx-2 text-gray-400">|</span><span class="text-gray-600">${event[6]}</span></div><div class="grid grid-cols-2 gap-x-4 gap-y-1 text-sm"><div class="text-gray-500">เวลา:</div><div class="text-gray-800">${event[4]} - ${event[5]}</div><div class="text-gray-500">เขต:</div><div class="text-gray-800">${event[9]}</div><div class="text-gray-500">ภาค:</div><div class="text-gray-800">${event[10]}</div></div><div class="mt-3 pt-3 border-t"><p class="text-sm text-gray-500">รายละเอียด:</p><p class="text-sm text-gray-800 whitespace-pre-wrap">${event[7]||'-'}</p></div></div>`})}else{modalContent.innerHTML=`<p class="text-gray-500">ไม่มีแผนงานสำหรับวันนี้</p>`}}
 function closeEventModal(){document.getElementById('eventModal').classList.remove('is-active')}
 function initScheduleFormPage(){document.getElementById('scheduleUsername').value=currentUser.username;document.getElementById('scheduleDate').valueAsDate=new Date();populateBranchDatalist();document.getElementById('scheduleBranch').addEventListener('input',updateBranchInfo);document.getElementById('scheduleForm').addEventListener('submit',handleSaveSchedule)}
 async function fetchBranchData(){try{const response=await apiGet({action:'getBranchData'});if(response.status==='success'){response.data.forEach(([branchName,area,region])=>{branchInfoMap.set(branchName,{area,region})})}}catch(error){console.error("Failed to fetch branches:",error)}}
@@ -154,7 +291,6 @@ function populateBranchDatalist(){const dataList=document.getElementById('branch
 function updateBranchInfo(e){const info=branchInfoMap.get(e.target.value);document.getElementById('scheduleArea').value=info?info.area:'';document.getElementById('scheduleRegion').value=info?info.region:''}
 async function handleSaveSchedule(e){e.preventDefault();const btn=document.getElementById('saveScheduleBtn');const successMsg=document.getElementById('scheduleSuccess');const payload={username:currentUser.username,workDate:document.getElementById('scheduleDate').value,startTime:document.getElementById('scheduleStartTime').value,endTime:document.getElementById('scheduleEndTime').value,branch:document.getElementById('scheduleBranch').value,details:document.getElementById('scheduleDetails').value,area:document.getElementById('scheduleArea').value,region:document.getElementById('scheduleRegion').value,};btn.disabled=true;btn.textContent='กำลังบันทึก...';try{const response=await apiGet({action:'saveSchedule',payload:JSON.stringify(payload)});if(response.status==='success'){successMsg.textContent='บันทึกตารางงานเรียบร้อยแล้ว!';successMsg.classList.remove('hidden');document.getElementById('scheduleForm').reset();initScheduleFormPage();setTimeout(()=>successMsg.classList.add('hidden'),4000)}else{throw new Error(response.message)}}catch(error){alert('เกิดข้อผิดพลาดในการบันทึก: '+error.message)}finally{btn.disabled=false;btn.textContent='บันทึกตารางงาน'}}
 async function loadActivityLogs(){const tableBody=document.getElementById('activityTableBody');tableBody.innerHTML=`<tr><td colspan="3" class="p-6 text-center text-gray-500"><i class="fas fa-spinner fa-spin mr-2"></i>กำลังโหลด...</td></tr>`;try{const response=await apiGet({action:'getActivityLogs'});tableBody.innerHTML='';if(response.status==='success'&&response.data.length>0){response.data.forEach(([timestamp,username,action])=>{tableBody.innerHTML+=`<tr class="hover:bg-gray-50"><td class="p-3 text-sm">${new Date(timestamp).toLocaleString('th-TH')}</td><td class="p-3 text-sm">${username}</td><td class="p-3 text-sm">${action}</td></tr>`})}else{tableBody.innerHTML=`<tr><td colspan="3" class="p-6 text-center text-gray-500">ไม่พบข้อมูล</td></tr>`}}catch(error){tableBody.innerHTML=`<tr><td colspan="3" class="p-6 text-center text-red-500">โหลดข้อมูลล้มเหลว</td></tr>`}}
-
 </script>
 </body>
 </html>
