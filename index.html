@@ -46,7 +46,7 @@
             </form>
             <div id="loginError" class="mt-4 p-3 bg-red-100 text-red-700 rounded-xl hidden"></div>
         </div>
-        <p class="text-center text-xs text-gray-400 mt-4">Version 7.4 (Bug Fixes & UX)</p>
+        <p class="text-center text-xs text-gray-400 mt-4">Version 7.5 (Final Polish)</p>
     </div>
     <div id="mainApp" class="hidden" x-data="{ navOpen: false }">
         <nav class="bg-white shadow-sm border-b sticky top-0 z-20">
@@ -104,6 +104,10 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('loginForm').addEventListener('submit', handleLogin);
     document.getElementById('togglePassword').addEventListener('click', togglePasswordVisibility);
     checkSession();
+    // **FIX**: Setup modal close listeners globally
+    const modal = document.getElementById('eventModal');
+    document.getElementById('closeModalBtn').addEventListener('click', () => modal.classList.remove('is-active'));
+    modal.addEventListener('click', e => { if (e.target === modal) modal.classList.remove('is-active') });
 });
 function checkSession(){const user=sessionStorage.getItem('currentUser');if(user){currentUser=JSON.parse(user);initializeApp()}}
 async function initializeApp(){
@@ -175,7 +179,6 @@ function initDashboardPage(){
     const headerRow=document.getElementById('header-row');
     headerRow.innerHTML=['วันที่','พนักงาน','สาขา','เขต','ภาค','จัดการ'].map(c=>`<th class="p-3 text-left text-xs font-medium uppercase tracking-wider">${c}</th>`).join('');
     setupDashboardFilters();
-    renderDashboardTable();
 }
 function setupDashboardFilters() {
     const filters = {
@@ -198,7 +201,7 @@ function setupDashboardFilters() {
         filters.region.value = '';
         renderDashboardTable();
     });
-    renderDashboardTable(); // Changed from updateCascadingFilters to a full render
+    renderDashboardTable();
 }
 function renderDashboardTable(){
     const filters = {
@@ -206,8 +209,9 @@ function renderDashboardTable(){
         employee: document.getElementById('filter-employee').value, branch: document.getElementById('filter-branch').value,
         area: document.getElementById('filter-area').value, region: document.getElementById('filter-region').value
     };
-    updateCascadingFilters(filters);
+    updateCascadingFilters(filters); // Update dropdowns first
     let filteredData = masterData.schedules;
+    // Then filter the data
     if (filters.month) { filteredData = filteredData.filter(row => row[3] && row[3].startsWith(filters.month)); }
     if (filters.date) { filteredData = filteredData.filter(row => row[3] === filters.date); }
     if (filters.region) { filteredData = filteredData.filter(row => row[10] === filters.region); }
@@ -250,9 +254,9 @@ function updateCascadingFilters(currentFilters) {
     updateOptionsFor('employee', 11, selects.employee);
 }
 function populateSelect(selectElement, options, selectedValue) {
-    const currentValue = selectedValue || selectElement.value;
+    const currentValue = selectElement.value; // Preserve user selection if possible
     selectElement.innerHTML = '<option value="">ทั้งหมด</option>';
-    options.forEach(option => { selectElement.innerHTML += `<option value="${option}" ${option == currentValue ? 'selected' : ''}>${option}</option>`; });
+    options.forEach(option => { selectElement.innerHTML += `<option value="${option}" ${option == currentValue && options.includes(currentValue) ? 'selected' : ''}>${option}</option>`; });
 }
 function updateStatsCards(data){
     const container=document.getElementById('stats-cards');
@@ -264,8 +268,8 @@ async function openEditModal(id){
     try{
         const response=await apiGet({action:'getScheduleById',payload:{id}});
         const data=response.data;
-        if(currentUser.role.toLowerCase()==='employee'){const today=new Date();today.setHours(0,0,0,0);if(new Date(data[3])<today){alert('ไม่สามารถแก้ไขข้อมูลย้อนหลังได้');return}}
         Swal.close();
+        if(currentUser.role.toLowerCase()==='employee'){const today=new Date();today.setHours(0,0,0,0);if(new Date(data[3])<today){Swal.fire('ผิดพลาด', 'ไม่สามารถแก้ไขข้อมูลย้อนหลังได้', 'error');return;}}
         const modal=document.getElementById('editModal');const form=document.getElementById('editScheduleForm');form.innerHTML=`<input type="hidden" id="edit-id" value="${data[0]}"><div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300">วันที่</label><input type="date" id="edit-date" value="${data[3]}" class="w-full mt-1 p-2 border rounded-md" required></div><div class="grid grid-cols-2 gap-4"><div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300">เวลาเริ่ม</label><input type="time" id="edit-start" value="${data[4]}" class="w-full mt-1 p-2 border rounded-md" required></div><div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300">เวลาสิ้นสุด</label><input type="time" id="edit-end" value="${data[5]}" class="w-full mt-1 p-2 border rounded-md" required></div></div><div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300">สาขา</label><input id="edit-branch" value="${data[6]}" class="w-full mt-1 p-2 border rounded-md" required></div><div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300">รายละเอียด</label><textarea id="edit-details" rows="3" class="w-full mt-1 p-2 border rounded-md">${data[7]||''}</textarea></div><div class="flex justify-end"><button type="submit" class="px-6 py-2 bg-primary text-white rounded-md">บันทึก</button></div>`;modal.classList.add('is-active');form.onsubmit=handleUpdateSchedule;document.getElementById('closeEditModalBtn').onclick=()=>modal.classList.remove('is-active')
     }catch(error){Swal.fire('ผิดพลาด!',error.message,'error')}
 }
@@ -276,9 +280,9 @@ function initCalendarPage(){
     const calendarEl=document.getElementById('calendar');
     const events=masterData.schedules.map(row=>{
         const[id,ts,user,date,st,et,branch,details,status,area,region,nickname]=row;
-        // IMPORTANT FIX: Combine date and time for FullCalendar
         const startDateTime = st ? `${date}T${st}` : date;
-        return{id, start: startDateTime, extendedProps:{user,nickname,workDate:date,startTime:st,endTime:et,branch,area,region,details}}
+        const title = `${nickname} : ${branch}`; // **FIX**: Create a meaningful title
+        return{id, start: startDateTime, title: title, allDay: !st, extendedProps:{user,nickname,workDate:date,startTime:st,endTime:et,branch,area,region,details}}
     });
     const isMobile = window.innerWidth < 768;
     fullCalendarInstance=new FullCalendar.Calendar(calendarEl,{
@@ -287,17 +291,15 @@ function initCalendarPage(){
         headerToolbar:{ left:'prev,next today', center:'title', right: isMobile ? 'listWeek,dayGridMonth' : 'dayGridMonth,timeGridWeek,listWeek' },
         events:events, eventDisplay:'block',
         eventDidMount: (info) => {
-            if (info.view.type !== 'listWeek') {
+            if (info.view.type.startsWith('dayGrid')) {
                 const userColor = stringToColor(info.event.extendedProps.user);
                 info.el.style.backgroundColor = hexToRgba(userColor, 0.8);
                 info.el.style.borderColor = userColor;
             }
         },
         eventContent: (arg) => {
-            // Let listWeek use a slightly modified default for better readability
-            if (arg.view.type === 'listWeek') {
-                const props = arg.event.extendedProps;
-                return { html: `<div class="ml-2"><span class="font-semibold">${props.nickname}</span> - <span>${props.branch}</span></div>` };
+            if (arg.view.type.startsWith('list')) {
+                return; // **FIX**: Use default list rendering for better readability
             }
             const props = arg.event.extendedProps;
             return { html: `<div class="fc-event-custom"><div class="font-bold">${props.startTime || ''}</div><div class="fc-event-title"><i class="fas fa-user fa-fw mr-1 opacity-80"></i>${props.nickname}</div><div class="fc-event-branch"><i class="fas fa-store fa-fw mr-1 opacity-80"></i>${props.branch}</div></div>` };
@@ -312,9 +314,6 @@ function initCalendarPage(){
     }
     fullCalendarInstance.render();
     document.getElementById('calendar-refresh-button').addEventListener('click',()=>refreshDataAndShowPage('calendar'));
-    const modal=document.getElementById('eventModal');
-    document.getElementById('closeModalBtn').addEventListener('click',()=>modal.classList.remove('is-active'));
-    modal.addEventListener('click',e=>{if(e.target===modal)modal.classList.remove('is-active')});
 }
 function populateCalendarFilter(dateInfo){if(currentUser.role.toLowerCase()==='employee')return;const start=dateInfo.start;const end=dateInfo.end;const eventsInView=masterData.schedules.filter(row=>{const d=new Date(row[3]);return d>=start&&d<end});const usersInView=new Set(eventsInView.map(row=>row[2]));const userMap=new Map(masterData.users.map(u=>[u.username,u.nickname]));const userFilter=document.getElementById('calendar-user-filter');const currentSelection=userFilter.value;userFilter.innerHTML=`<option value="all">พนักงานทั้งหมด</option>`;const usersWithOptions=Array.from(usersInView).map(username=>({username,nickname:userMap.get(username)||username}));usersWithOptions.sort((a,b)=>a.nickname.localeCompare(b.nickname,'th'));usersWithOptions.forEach(u=>{userFilter.innerHTML+=`<option value="${u.username}">${u.nickname}</option>`});if(Array.from(usersInView).includes(currentSelection)){userFilter.value=currentSelection}}
 function showCalendarEventModal(props){
