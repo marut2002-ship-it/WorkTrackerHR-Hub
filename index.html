@@ -26,7 +26,7 @@
             </form>
             <div id="loginError" class="mt-4 p-3 bg-red-100 text-red-700 rounded-xl hidden"></div>
         </div>
-        <p class="text-center text-xs text-gray-400 mt-4">Version 5.1 (Final Fix)</p>
+        <p class="text-center text-xs text-gray-400 mt-4">Version 5.2</p>
     </div>
     <div id="mainApp" class="hidden">
         <nav class="bg-white shadow-sm border-b"><div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8"><div class="flex justify-between items-center h-16"><div class="flex items-center space-x-8"><span class="text-xl font-bold text-gray-800">Work Tracker</span><div id="main-nav-links" class="hidden md:flex space-x-6"><button onclick="showPage('dashboard', this)" class="nav-btn text-gray-700 px-3 py-2 rounded-lg">ภาพรวม</button><button onclick="showPage('calendar', this)" class="nav-btn text-gray-700 px-3 py-2 rounded-lg">ปฏิทิน</button><button onclick="showPage('scheduleForm', this)" class="nav-btn text-gray-700 px-3 py-2 rounded-lg">ลงเวลาปฏิบัติงาน</button><button id="activity-log-nav" onclick="showPage('activity', this)" class="nav-btn text-gray-700 px-3 py-2 rounded-lg">Activity Log</button></div></div><div class="flex items-center space-x-4"><div class="text-right"><div class="text-sm font-medium text-gray-800" id="userDisplay"></div><div class="text-xs text-gray-500" id="roleDisplay"></div></div><button onclick="logout()" class="text-gray-500 hover:text-red-500 p-2 rounded-lg" title="ออกจากระบบ"><i class="fa-solid fa-right-from-bracket"></i></button></div></div></div></nav>
@@ -41,7 +41,7 @@
 
 <script>
 // ####################################################################
-// ##  สำคัญ! วาง URL ใหม่ล่าสุดที่ได้จากการ DEPLOY ของคุณที่นี่   ##
+// ##  สำคัญ! วาง URL ของคุณที่นี่ (URL เดิมจาก v5.0)   ##
 // ####################################################################
 const SCRIPT_URL = 'https://script.google.com/a/macros/srisawadpower.com/s/AKfycbzt18TtPyI9XfNbBqMEFHH9afKwwWqgxfUKwmVs7h7235EpGsk3lHqZ_i7ENxFVt7ef/exec'; 
 // ####################################################################
