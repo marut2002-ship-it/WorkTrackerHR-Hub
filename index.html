@@ -46,7 +46,7 @@
             </form>
             <div id="loginError" class="mt-4 p-3 bg-red-100 text-red-700 rounded-xl hidden"></div>
         </div>
-        <p class="text-center text-xs text-gray-400 mt-4">Version 7.6 (Final Polish)</p>
+        <p class="text-center text-xs text-gray-400 mt-4">Version 7.7 (Flexible Rules)</p>
     </div>
     <div id="mainApp" class="hidden" x-data="{ navOpen: false }">
         <nav class="bg-white shadow-sm border-b sticky top-0 z-20">
@@ -95,7 +95,7 @@
 // ####################################################################
 // ##  สำคัญ! วาง URL ของคุณที่นี่ (URL เดิม)   ##
 // ####################################################################
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbybCuyPyfR2XypPEisirdgQp3Z9g1iSmfM_TgUJ_SQFp8ql6pz91IBaddq_MjCxieFw/exec'; 
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxUPD9iGKT_5-8YNAdx5C28DNySbxC9DbjZCRUiW8tYJC_SXSi5kydRLL0xea4eIxFd/exec'; 
 // ####################################################################
 
 let currentUser = null,fullCalendarInstance = null,masterData = { schedules: [], branches: [], users: [] };
@@ -104,7 +104,6 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('loginForm').addEventListener('submit', handleLogin);
     document.getElementById('togglePassword').addEventListener('click', togglePasswordVisibility);
     checkSession();
-    // **FIX**: Setup modal close listeners globally
     const modal = document.getElementById('eventModal');
     document.getElementById('closeModalBtn').addEventListener('click', () => modal.classList.remove('is-active'));
     modal.addEventListener('click', e => { if (e.target === modal) modal.classList.remove('is-active') });
@@ -173,7 +172,7 @@ function logout(){sessionStorage.removeItem('currentUser');location.reload()}
 function togglePasswordVisibility(){const passwordInput=document.getElementById('password');const icon=this.querySelector('i');const type=passwordInput.getAttribute('type')==='password'?'text':'password';passwordInput.setAttribute('type',type);icon.classList.toggle('fa-eye');icon.classList.toggle('fa-eye-slash')}
 // --- PAGE ROUTING & HTML ---
 function showPage(pageId,element){document.querySelectorAll('.nav-btn').forEach(btn=>btn.classList.remove('text-primary','bg-blue-100','dark:bg-blue-900/50'));if(element)element.classList.add('text-primary','bg-blue-100','dark:bg-blue-900/50');const pageContainer=document.getElementById(pageId+'Page');if(pageContainer){document.querySelectorAll('.page-content').forEach(p=>p.classList.add('hidden'));pageContainer.innerHTML=getPageHTML(pageId);pageContainer.classList.remove('hidden');switch(pageId){case'dashboard':initDashboardPage();break;case'calendar':initCalendarPage();break;case'scheduleForm':initScheduleFormPage();break;case'activity':loadActivityLogs();break}}}
-function getPageHTML(pageId){return{dashboard:`<div class="fade-in space-y-8"><div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4"><h1 class="text-3xl font-bold text-gray-800">Dashboard</h1></div><div id="stats-cards" class="grid grid-cols-1 md:grid-cols-3 gap-6"></div><div class="bg-white dark:bg-gray-800/50 rounded-xl shadow-md border dark:border-gray-700"><div class="p-4 border-b dark:border-gray-700 flex justify-between items-center"><h2 class="text-lg font-semibold">ตัวกรองข้อมูล</h2><button id="reset-filters-btn" class="text-sm text-gray-600 dark:text-gray-300 hover:text-primary dark:hover:text-blue-400 font-medium flex items-center gap-2"><i class="fas fa-undo"></i>รีเซ็ต</button></div><div id="dashboard-filters" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4 p-4"><div><label for="filter-month" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">เดือน</label><input type="month" id="filter-month" class="w-full p-2 border rounded-md text-sm"></div><div id="date-filter-container" style="display:none;"><label for="filter-date" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">วันที่</label><input type="date" id="filter-date" class="w-full p-2 border rounded-md text-sm"></div><div><label for="filter-employee" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">พนักงาน</label><select id="filter-employee" class="w-full p-2 border rounded-md text-sm"><option value="">ทั้งหมด</option></select></div><div><label for="filter-branch" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">สาขา</label><select id="filter-branch" class="w-full p-2 border rounded-md text-sm"><option value="">ทั้งหมด</option></select></div><div><label for="filter-area" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">เขต</label><select id="filter-area" class="w-full p-2 border rounded-md text-sm"><option value="">ทั้งหมด</option></select></div><div><label for="filter-region" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">ภาค</label><select id="filter-region" class="w-full p-2 border rounded-md text-sm"><option value="">ทั้งหมด</option></select></div></div></div><div class="bg-white dark:bg-gray-800/50 rounded-xl shadow-md border dark:border-gray-700 overflow-hidden"><div class="p-4 border-b dark:border-gray-700"><h2 class="text-lg font-semibold">ตารางงาน</h2></div><div class="overflow-x-auto"><table class="w-full dense-table"><thead class="table-header-custom"><tr id="header-row"></tr></thead><tbody id="dashboard-table-body"></tbody></table></div></div></div>`,calendar:`<div class="fade-in"><div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4"><h1 class="text-3xl font-bold text-gray-800">ปฏิทินทีม</h1><div class="flex items-center gap-2"><div id="calendar-filter-container" class="hidden"><select id="calendar-user-filter" class="p-2 border rounded-md text-sm"><option value="all">พนักงานทั้งหมด</option></select></div><button id="calendar-refresh-button" class="p-2 border rounded-md hover:bg-gray-100 dark:hover:bg-gray-700" title="รีเฟรชข้อมูล"><i class="fas fa-sync-alt"></i></button></div></div><div class="bg-white dark:bg-gray-800/50 p-4 sm:p-6 rounded-2xl shadow-md border dark:border-gray-700"><div id="calendar"></div></div></div>`,scheduleForm:`<div class="fade-in"><h1 class="text-3xl font-bold text-gray-800 mb-8">ลงเวลาปฏิบัติงาน</h1><div class="bg-white rounded-2xl shadow-sm border p-6 mb-8"><h2 class="text-xl font-bold text-gray-800 mb-6">สร้างตารางงานใหม่</h2><form id="scheduleForm" class="space-y-6"><div class="grid grid-cols-1 md:grid-cols-2 gap-6"><div><label for="scheduleDate" class="block text-sm font-medium">วันที่ปฏิบัติงาน</label><input type="date" id="scheduleDate" class="w-full mt-1 p-2 border rounded-md" required></div><div><label for="scheduleUsername" class="block text-sm font-medium">Username</label><input type="text" id="scheduleUsername" class="w-full mt-1 p-2 border bg-gray-100 rounded-md" readonly></div></div><div class="grid grid-cols-1 md:grid-cols-2 gap-6"><div><label for="scheduleStartTime" class="block text-sm font-medium">เวลาเริ่มงาน</label><input type="time" id="scheduleStartTime" class="w-full mt-1 p-2 border rounded-md" required></div><div><label for="scheduleEndTime" class="block text-sm font-medium">เวลาเลิกงาน</label><input type="time" id="scheduleEndTime" class="w-full mt-1 p-2 border rounded-md" required></div></div><div><label for="scheduleBranch" class="block text-sm font-medium">สาขา</label><input list="branch-list" id="scheduleBranch" class="w-full mt-1 p-2 border rounded-md" placeholder="พิมพ์เพื่อค้นหา..." required><datalist id="branch-list"></datalist></div><div class="grid grid-cols-1 md:grid-cols-2 gap-6"><div><label class="block text-sm font-medium">เขต</label><input type="text" id="scheduleArea" class="w-full mt-1 p-2 border bg-gray-100 rounded-md" readonly></div><div><label for="scheduleRegion" class="block text-sm font-medium">ภาค</label><input type="text" id="scheduleRegion" class="w-full mt-1 p-2 border bg-gray-100 rounded-md" readonly></div></div><div><label for="scheduleDetails" class="block text-sm font-medium">รายละเอียดงาน</label><textarea id="scheduleDetails" rows="3" class="w-full mt-1 p-2 border rounded-md"></textarea></div><div class="flex justify-end"><button type="submit" id="saveScheduleBtn" class="px-6 py-3 bg-primary text-white rounded-xl">บันทึก</button></div></form><div id="scheduleSuccess" class="mt-4 p-4 bg-green-100 text-green-700 rounded-xl hidden"></div></div></div>`,activity:`<div class="fade-in"><h1 class="text-3xl font-bold text-gray-800 mb-8">Activity Log</h1><div class="bg-white rounded-2xl shadow-sm border overflow-hidden"><div class="overflow-x-auto"><table class="w-full"><thead class="bg-gray-50"><tr><th class="px-6 py-4 text-left text-xs font-medium uppercase">วัน-เวลา</th><th class="px-6 py-4 text-left text-xs font-medium uppercase">Username</th><th class="px-6 py-4 text-left text-xs font-medium uppercase">กิจกรรม</th></tr></thead><tbody id="activityTableBody" class="bg-white divide-y divide-gray-200"></tbody></table></div></div></div>`}[pageId]||''}
+function getPageHTML(pageId){return{dashboard:`<div class="fade-in space-y-8"><div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4"><h1 class="text-3xl font-bold text-gray-800">Dashboard</h1></div><div id="stats-cards" class="grid grid-cols-1 md:grid-cols-3 gap-6"></div><div class="bg-white dark:bg-gray-800/50 rounded-xl shadow-md border dark:border-gray-700"><div class="p-4 border-b dark:border-gray-700 flex justify-between items-center"><h2 class="text-lg font-semibold">ตัวกรองข้อมูล</h2><button id="reset-filters-btn" class="text-sm text-gray-600 dark:text-gray-300 hover:text-primary dark:hover:text-blue-400 font-medium flex items-center gap-2"><i class="fas fa-undo"></i>รีเซ็ต</button></div><div id="dashboard-filters" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4 p-4"><div><label for="filter-month" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">เดือน</label><input type="month" id="filter-month" class="w-full p-2 border rounded-md text-sm"></div><div id="date-filter-container" style="display:none;"><label for="filter-date" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">วันที่</label><input type="date" id="filter-date" class="w-full p-2 border rounded-md text-sm"></div><div><label for="filter-employee" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">พนักงาน</label><select id="filter-employee" class="w-full p-2 border rounded-md text-sm"><option value="">ทั้งหมด</option></select></div><div><label for="filter-branch" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">สาขา</label><select id="filter-branch" class="w-full p-2 border rounded-md text-sm"><option value="">ทั้งหมด</option></select></div><div><label for="filter-area" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">เขต</label><select id="filter-area" class="w-full p-2 border rounded-md text-sm"><option value="">ทั้งหมด</option></select></div><div><label for="filter-region" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">ภาค</label><select id="filter-region" class="w-full p-2 border rounded-md text-sm"><option value="">ทั้งหมด</option></select></div></div></div><div class="bg-white dark:bg-gray-800/50 rounded-xl shadow-md border dark:border-gray-700 overflow-hidden"><div class="p-4 border-b dark:border-gray-700"><h2 class="text-lg font-semibold">ตารางงาน</h2></div><div class="overflow-x-auto"><table class="w-full dense-table"><thead class="table-header-custom"><tr id="header-row"></tr></thead><tbody id="dashboard-table-body"></tbody></table></div></div></div>`,calendar:`<div class="fade-in"><div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4"><h1 class="text-3xl font-bold text-gray-800">ปฏิทินทีม</h1><div class="flex items-center gap-2"><div id="calendar-filter-container" class="hidden"><select id="calendar-user-filter" class="p-2 border rounded-md text-sm"><option value="all">พนักงานทั้งหมด</option></select></div><button id="calendar-refresh-button" class="p-2 border rounded-md hover:bg-gray-100 dark:hover:bg-gray-700" title="รีเฟรชข้อมูล"><i class="fas fa-sync-alt"></i></button></div></div><div class="bg-white dark:bg-gray-800/50 p-4 sm:p-6 rounded-2xl shadow-md border dark:border-gray-700"><div id="calendar"></div></div></div>`,scheduleForm:`<div class="fade-in"><h1 class="text-3xl font-bold text-gray-800 mb-8">ลงเวลาปฏิบัติงาน</h1><div class="bg-white rounded-2xl shadow-sm border p-6 mb-8"><h2 class="text-xl font-bold text-gray-800 mb-6">สร้างตารางงานใหม่</h2><form id="scheduleForm" class="space-y-6"><div class="grid grid-cols-1 md:grid-cols-2 gap-6"><div><label for="scheduleDate" class="block text-sm font-medium">วันที่ปฏิบัติงาน</label><input type="date" id="scheduleDate" class="w-full mt-1 p-2 border rounded-md" required></div><div><label for="scheduleUsername" class="block text-sm font-medium">Username</label><input type="text" id="scheduleUsername" class="w-full mt-1 p-2 border bg-gray-100 rounded-md" readonly></div></div><div class="grid grid-cols-1 md:grid-cols-2 gap-6"><div><label for="schedulePeriod" class="block text-sm font-medium">ช่วงเวลา</label><select id="schedulePeriod" class="w-full mt-1 p-2 border rounded-md"><option value="">-- เลือกช่วงเวลา --</option><option value="morning">ครึ่งวันเช้า (08:30-12:00)</option><option value="afternoon">ครึ่งวันบ่าย (13:00-17:30)</option><option value="full">ทั้งวัน (08:30-17:30)</option><option value="leave">วันลา (พักร้อน, กิจ, ป่วย)</option></select></div></div><div class="grid grid-cols-1 md:grid-cols-2 gap-6"><div><label for="scheduleStartTime" class="block text-sm font-medium">เวลาเริ่มงาน</label><input type="time" id="scheduleStartTime" step="600" class="w-full mt-1 p-2 border rounded-md" required></div><div><label for="scheduleEndTime" class="block text-sm font-medium">เวลาเลิกงาน</label><input type="time" id="scheduleEndTime" step="600" class="w-full mt-1 p-2 border rounded-md" required></div></div><div><label for="scheduleBranch" class="block text-sm font-medium">สาขา</label><input list="branch-list" id="scheduleBranch" class="w-full mt-1 p-2 border rounded-md" placeholder="พิมพ์เพื่อค้นหา..." required><datalist id="branch-list"></datalist></div><div class="grid grid-cols-1 md:grid-cols-2 gap-6"><div><label class="block text-sm font-medium">เขต</label><input type="text" id="scheduleArea" class="w-full mt-1 p-2 border bg-gray-100 rounded-md" readonly></div><div><label for="scheduleRegion" class="block text-sm font-medium">ภาค</label><input type="text" id="scheduleRegion" class="w-full mt-1 p-2 border bg-gray-100 rounded-md" readonly></div></div><div><label for="scheduleDetails" class="block text-sm font-medium">รายละเอียดงาน</label><textarea id="scheduleDetails" rows="3" class="w-full mt-1 p-2 border rounded-md"></textarea></div><div class="flex justify-end"><button type="submit" id="saveScheduleBtn" class="px-6 py-3 bg-primary text-white rounded-xl">บันทึก</button></div></form></div></div>`,activity:`<div class="fade-in"><h1 class="text-3xl font-bold text-gray-800 mb-8">Activity Log</h1><div class="bg-white rounded-2xl shadow-sm border overflow-hidden"><div class="overflow-x-auto"><table class="w-full"><thead class="bg-gray-50"><tr><th class="px-6 py-4 text-left text-xs font-medium uppercase">วัน-เวลา</th><th class="px-6 py-4 text-left text-xs font-medium uppercase">Username</th><th class="px-6 py-4 text-left text-xs font-medium uppercase">กิจกรรม</th></tr></thead><tbody id="activityTableBody" class="bg-white divide-y divide-gray-200"></tbody></table></div></div></div>`}[pageId]||''}
 // --- DASHBOARD PAGE ---
 function initDashboardPage(){
     const headerRow=document.getElementById('header-row');
@@ -220,12 +219,18 @@ function renderDashboardTable(){
     updateStatsCards(filteredData);
     const tableBody=document.getElementById('dashboard-table-body');
     if(filteredData.length===0){ tableBody.innerHTML=`<tr><td colspan="6" class="p-8 text-center text-gray-500">ไม่พบข้อมูลตามเงื่อนไขที่เลือก</td></tr>`; return; }
+    
+    // **NEW**: Logic for 1-day grace period on frontend
     const today=new Date(); today.setHours(0,0,0,0);
+    const yesterday = new Date(today); yesterday.setDate(today.getDate() - 1);
+
     tableBody.innerHTML=filteredData.sort((a, b) => new Date(b[3]) - new Date(a[3])).map(row=>{
         const[id,ts,user,date,st,et,branch,details,status,area,region,nickname]=row;
-        const isPast=new Date(date)<today;
-        const canEdit=currentUser.role.toLowerCase()!=='employee'||!isPast;
-        return`<tr><td class="p-3 text-sm">${formatDateForDisplay(date)}</td><td class="p-3 text-sm">${nickname}</td><td class="p-3 text-sm">${branch}</td><td class="p-3 text-sm">${area}</td><td class="p-3 text-sm">${region}</td><td class="p-3 text-sm text-center whitespace-nowrap space-x-2"><button onclick="openViewModal('${id}')" class="text-gray-500 hover:text-primary p-1" title="ดู"><i class="fas fa-eye"></i></button><button onclick="openEditModal('${id}')" class="text-blue-500 hover:text-blue-700 p-1 ${!canEdit?'opacity-50 cursor-not-allowed':''}" ${!canEdit?'disabled':''} title="แก้ไข"><i class="fas fa-pen-to-square"></i></button><button onclick="handleDelete('${id}')" class="text-red-500 hover:text-red-700 p-1 ${!canEdit?'opacity-50 cursor-not-allowed':''}" ${!canEdit?'disabled':''} title="ลบ"><i class="fas fa-trash-can"></i></button></td></tr>`
+        const workDate = new Date(date);
+        const cannotEdit = workDate < yesterday;
+        const canManage = currentUser.role.toLowerCase()!=='employee' || !cannotEdit;
+
+        return`<tr><td class="p-3 text-sm">${formatDateForDisplay(date)}</td><td class="p-3 text-sm">${nickname}</td><td class="p-3 text-sm">${branch}</td><td class="p-3 text-sm">${area}</td><td class="p-3 text-sm">${region}</td><td class="p-3 text-sm text-center whitespace-nowrap space-x-2"><button onclick="openViewModal('${id}')" class="text-gray-500 hover:text-primary p-1" title="ดู"><i class="fas fa-eye"></i></button><button onclick="openEditModal('${id}')" class="text-blue-500 hover:text-blue-700 p-1 ${!canManage?'opacity-50 cursor-not-allowed':''}" ${!canManage?'disabled':''} title="แก้ไข"><i class="fas fa-pen-to-square"></i></button><button onclick="handleDelete('${id}')" class="text-red-500 hover:text-red-700 p-1 ${!canManage?'opacity-50 cursor-not-allowed':''}" ${!canManage?'disabled':''} title="ลบ"><i class="fas fa-trash-can"></i></button></td></tr>`
     }).join('');
 }
 function updateCascadingFilters(currentFilters) {
@@ -268,13 +273,16 @@ async function openEditModal(id){
         const response=await apiGet({action:'getScheduleById',payload:{id}});
         const data=response.data;
         Swal.close();
-        if(currentUser.role.toLowerCase()==='employee'){const today=new Date();today.setHours(0,0,0,0);if(new Date(data[3])<today){Swal.fire('ผิดพลาด', 'ไม่สามารถแก้ไขข้อมูลย้อนหลังได้', 'error');return;}}
-        const modal=document.getElementById('editModal');const form=document.getElementById('editScheduleForm');form.innerHTML=`<input type="hidden" id="edit-id" value="${data[0]}"><div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300">วันที่</label><input type="date" id="edit-date" value="${data[3]}" class="w-full mt-1 p-2 border rounded-md" required></div><div class="grid grid-cols-2 gap-4"><div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300">เวลาเริ่ม</label><input type="time" id="edit-start" value="${data[4]}" class="w-full mt-1 p-2 border rounded-md" required></div><div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300">เวลาสิ้นสุด</label><input type="time" id="edit-end" value="${data[5]}" class="w-full mt-1 p-2 border rounded-md" required></div></div><div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300">สาขา</label><input id="edit-branch" value="${data[6]}" class="w-full mt-1 p-2 border rounded-md" required></div><div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300">รายละเอียด</label><textarea id="edit-details" rows="3" class="w-full mt-1 p-2 border rounded-md">${data[7]||''}</textarea></div><div class="flex justify-end"><button type="submit" class="px-6 py-2 bg-primary text-white rounded-md">บันทึก</button></div>`;modal.classList.add('is-active');form.onsubmit=handleUpdateSchedule;document.getElementById('closeEditModalBtn').onclick=()=>modal.classList.remove('is-active')
+        const workDate = new Date(data[3]);
+        const today=new Date(); today.setHours(0,0,0,0);
+        const yesterday = new Date(today); yesterday.setDate(today.getDate() - 1);
+        if(currentUser.role.toLowerCase()==='employee' && workDate < yesterday){Swal.fire('ผิดพลาด', 'ไม่สามารถแก้ไขข้อมูลที่เก่ากว่าเมื่อวานได้', 'error');return;}
+        const modal=document.getElementById('editModal');const form=document.getElementById('editScheduleForm');form.innerHTML=`<input type="hidden" id="edit-id" value="${data[0]}"><div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300">วันที่</label><input type="date" id="edit-date" value="${data[3]}" class="w-full mt-1 p-2 border rounded-md" required></div><div class="grid grid-cols-2 gap-4"><div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300">เวลาเริ่ม</label><input type="time" id="edit-start" value="${data[4]}" step="600" class="w-full mt-1 p-2 border rounded-md" required></div><div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300">เวลาสิ้นสุด</label><input type="time" id="edit-end" value="${data[5]}" step="600" class="w-full mt-1 p-2 border rounded-md" required></div></div><div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300">สาขา</label><input id="edit-branch" value="${data[6]}" class="w-full mt-1 p-2 border rounded-md" required></div><div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300">รายละเอียด</label><textarea id="edit-details" rows="3" class="w-full mt-1 p-2 border rounded-md">${data[7]||''}</textarea></div><div class="flex justify-end"><button type="submit" class="px-6 py-2 bg-primary text-white rounded-md">บันทึก</button></div>`;modal.classList.add('is-active');form.onsubmit=handleUpdateSchedule;document.getElementById('closeEditModalBtn').onclick=()=>modal.classList.remove('is-active')
     }catch(error){Swal.fire('ผิดพลาด!',error.message,'error')}
 }
-async function handleUpdateSchedule(e){e.preventDefault();const payload={id:document.getElementById('edit-id').value,workDate:document.getElementById('edit-date').value,startTime:document.getElementById('edit-start').value,endTime:document.getElementById('edit-end').value,branch:document.getElementById('edit-branch').value,details:document.getElementById('edit-details').value,username:currentUser.username};try{const response=await apiGet({action:'editSchedule',payload});document.getElementById('editModal').classList.remove('is-active');Swal.fire({title:'สำเร็จ!',text:'แก้ไขข้อมูลเรียบร้อยแล้ว',icon:'success',toast:true,position:'top-end',showConfirmButton:false,timer:3000});await refreshDataAndShowPage('dashboard')}catch(error){Swal.fire('ผิดพลาด!',error.message,'error')}}
+async function handleUpdateSchedule(e){e.preventDefault();const payload={id:document.getElementById('edit-id').value,workDate:document.getElementById('edit-date').value,startTime:document.getElementById('scheduleStartTime').value,endTime:document.getElementById('scheduleEndTime').value,branch:document.getElementById('scheduleBranch').value,details:document.getElementById('scheduleDetails').value,username:currentUser.username};try{const response=await apiGet({action:'editSchedule',payload});document.getElementById('editModal').classList.remove('is-active');Swal.fire({title:'สำเร็จ!',text:'แก้ไขข้อมูลเรียบร้อยแล้ว',icon:'success',toast:true,position:'top-end',showConfirmButton:false,timer:3000});await refreshDataAndShowPage('dashboard')}catch(error){Swal.fire('ผิดพลาด!',error.message,'error')}}
 async function handleDelete(id){const result=await Swal.fire({title:'คุณแน่ใจหรือไม่?',text:"การกระทำนี้ไม่สามารถย้อนกลับได้!",icon:'warning',showCancelButton:true,confirmButtonColor:'#3085d6',cancelButtonColor:'#d33',confirmButtonText:'ใช่, ลบเลย!',cancelButtonText:'ยกเลิก'});if(result.isConfirmed){try{await apiGet({action:'deleteSchedule',payload:{id,username:currentUser.username}});Swal.fire({title:'ลบแล้ว!',text:'ข้อมูลถูกลบเรียบร้อย',icon:'success',toast:true,position:'top-end',showConfirmButton:false,timer:3000});await refreshDataAndShowPage('dashboard')}catch(error){Swal.fire('ผิดพลาด!',error.message,'error')}}}
-// --- CALENDAR PAGE (REVAMPED) ---
+// --- CALENDAR PAGE ---
 function initCalendarPage(){
     const calendarEl=document.getElementById('calendar');
     const events=masterData.schedules.map(row=>{
@@ -297,23 +305,10 @@ function initCalendarPage(){
         },
         eventContent: (arg) => {
             const props = arg.event.extendedProps;
-            // **FIX**: Custom rich content for List View
             if (arg.view.type.startsWith('list')) {
                 const userColor = stringToColor(props.user);
-                const html = `
-                    <div class="flex items-center gap-3 w-full">
-                        <div class="fc-list-event-dot" style="border-color: ${userColor}"></div>
-                        <div class="fc-event-time">${arg.timeText}</div>
-                        <div class="fc-event-title">
-                            <div class="flex flex-col">
-                                <span class="font-semibold">${props.nickname}</span>
-                                <span class="text-sm text-gray-500 dark:text-gray-400">${props.branch}</span>
-                            </div>
-                        </div>
-                    </div>`;
-                return { html: html };
+                return { html: `<div class="flex items-center gap-3 w-full"><div class="fc-list-event-dot" style="border-color: ${userColor}"></div><div class="fc-event-time">${arg.timeText}</div><div class="fc-event-title"><div class="flex flex-col"><span class="font-semibold">${props.nickname}</span><span class="text-sm text-gray-500 dark:text-gray-400">${props.branch}</span></div></div></div>` };
             }
-            // Grid View content
             return { html: `<div class="fc-event-custom"><div class="font-bold">${props.startTime || ''}</div><div class="fc-event-title"><i class="fas fa-user fa-fw mr-1 opacity-80"></i>${props.nickname}</div><div class="fc-event-branch"><i class="fas fa-store fa-fw mr-1 opacity-80"></i>${props.branch}</div></div>` };
         },
         eventClick: info => showCalendarEventModal(info.event.extendedProps),
@@ -335,7 +330,58 @@ function showCalendarEventModal(props){
     modal.classList.add('is-active');
 }
 // --- SCHEDULE FORM & ACTIVITY LOG ---
-function initScheduleFormPage(){document.getElementById('scheduleUsername').value=currentUser.username;document.getElementById('scheduleDate').valueAsDate=new Date;const branchInput=document.getElementById('scheduleBranch'),dataList=document.getElementById('branch-list');const branchMap=new Map(masterData.branches.map(b=>[b[0],{area:b[1],region:b[2]}]));dataList.innerHTML=masterData.branches.map(b=>`<option value="${b[0]}"></option>`).join('');branchInput.addEventListener('input',e=>{const info=branchMap.get(e.target.value);document.getElementById('scheduleArea').value=info?info.area:'';document.getElementById('scheduleRegion').value=info?info.region:''});document.getElementById('scheduleForm').addEventListener('submit',handleSaveSchedule)}
+function initScheduleFormPage(){
+    document.getElementById('scheduleUsername').value=currentUser.username;
+    document.getElementById('scheduleDate').valueAsDate=new Date;
+    const branchInput=document.getElementById('scheduleBranch'),dataList=document.getElementById('branch-list');
+    const branchMap=new Map(masterData.branches.map(b=>[b[0],{area:b[1],region:b[2]}]));
+    dataList.innerHTML=masterData.branches.map(b=>`<option value="${b[0]}"></option>`).join('');
+    branchInput.addEventListener('input',e=>{const info=branchMap.get(e.target.value);document.getElementById('scheduleArea').value=info?info.area:'';document.getElementById('scheduleRegion').value=info?info.region:''});
+    
+    // **NEW**: Logic for schedule period dropdown
+    const periodSelect = document.getElementById('schedulePeriod');
+    const startTimeInput = document.getElementById('scheduleStartTime');
+    const endTimeInput = document.getElementById('scheduleEndTime');
+    const detailsInput = document.getElementById('scheduleDetails');
+
+    periodSelect.addEventListener('change', (e) => {
+        const value = e.target.value;
+        startTimeInput.disabled = false;
+        endTimeInput.disabled = false;
+        startTimeInput.required = true;
+        endTimeInput.required = true;
+
+        switch(value) {
+            case 'morning':
+                startTimeInput.value = '08:30';
+                endTimeInput.value = '12:00';
+                break;
+            case 'afternoon':
+                startTimeInput.value = '13:00';
+                endTimeInput.value = '17:30';
+                break;
+            case 'full':
+                startTimeInput.value = '08:30';
+                endTimeInput.value = '17:30';
+                break;
+            case 'leave':
+                startTimeInput.value = '';
+                endTimeInput.value = '';
+                startTimeInput.disabled = true;
+                endTimeInput.disabled = true;
+                startTimeInput.required = false;
+                endTimeInput.required = false;
+                detailsInput.value = 'วันลา';
+                break;
+            default:
+                startTimeInput.value = '';
+                endTimeInput.value = '';
+                break;
+        }
+    });
+
+    document.getElementById('scheduleForm').addEventListener('submit',handleSaveSchedule);
+}
 async function handleSaveSchedule(e){e.preventDefault();const btn=document.getElementById('saveScheduleBtn'),successMsg=document.getElementById('scheduleSuccess');const payload={username:currentUser.username,workDate:document.getElementById('scheduleDate').value,startTime:document.getElementById('scheduleStartTime').value,endTime:document.getElementById('scheduleEndTime').value,branch:document.getElementById('scheduleBranch').value,details:document.getElementById('scheduleDetails').value,area:document.getElementById('scheduleArea').value,region:document.getElementById('scheduleRegion').value};btn.disabled=true;btn.textContent='กำลังบันทึก...';try{await apiGet({action:'saveSchedule',payload});Swal.fire({title:'สำเร็จ!',text:'บันทึกข้อมูลเรียบร้อย',icon:'success',toast:true,position:'top-end',showConfirmButton:false,timer:3000});await refreshDataAndShowPage('dashboard')}catch(error){Swal.fire('ผิดพลาด!',error.message,'error')}finally{btn.disabled=false;btn.textContent='บันทึก'}}
 async function loadActivityLogs(){const tableBody=document.getElementById('activityTableBody');tableBody.innerHTML=`<tr><td colspan="3" class="p-6 text-center text-gray-500"><i class="fas fa-spinner fa-spin mr-2"></i>Loading...</td></tr>`;try{const response=await apiGet({action:'getActivityLogs'});tableBody.innerHTML=response.data.length===0?`<tr><td colspan="3" class="p-6 text-center text-gray-500">ไม่พบข้อมูล</td></tr>`:response.data.map(([ts,user,act])=>`<tr><td class="p-3 text-sm">${ts}</td><td class="p-3 text-sm">${user}</td><td class="p-3 text-sm">${act}</td></tr>`).join('')}catch(error){tableBody.innerHTML=`<tr><td colspan="3" class="p-6 text-center text-red-500">โหลดข้อมูลล้มเหลว</td></tr>`}}
 </script>
