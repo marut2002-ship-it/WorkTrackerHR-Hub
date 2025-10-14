@@ -46,7 +46,7 @@
             </form>
             <div id="loginError" class="mt-4 p-3 bg-red-100 text-red-700 rounded-xl hidden"></div>
         </div>
-        <p class="text-center text-xs text-gray-400 mt-4">Version 8.1 (New Edit Form & Rules)</p>
+        <p class="text-center text-xs text-gray-400 mt-4">Version 8.2 (Edit Form Fixes)</p>
     </div>
     <div id="mainApp" class="hidden" x-data="{ navOpen: false }">
         <nav class="bg-white shadow-sm border-b sticky top-0 z-20">
@@ -309,7 +309,6 @@ async function openEditModal(id){
         const form=document.getElementById('editScheduleForm');
         form.innerHTML=getPageHTML('scheduleForm').match(/<form id="scheduleForm"[\s\S]*?<\/form>/)[0].replace('scheduleForm', 'editForm');
         
-        // Setup IDs for edit form
         ['Date', 'Username', 'Period', 'StartHour', 'StartMinute', 'EndHour', 'EndMinute', 'Branch', 'Area', 'Region', 'Details'].forEach(f => {
             const el = form.querySelector(`#schedule${f}`);
             if(el) el.id = `edit${f}`;
@@ -320,21 +319,19 @@ async function openEditModal(id){
 
         form.insertAdjacentHTML('afterbegin', `<input type="hidden" id="edit-id" value="${data[0]}">`);
 
-        // Initialize and fill data
         const editElements = {
-            id: document.getElementById('edit-id'), date: document.getElementById('editDate'),
-            username: document.getElementById('editUsername'), period: document.getElementById('editPeriod'),
+            date: document.getElementById('editDate'), username: document.getElementById('editUsername'),
+            period: document.getElementById('editPeriod'),
             startH: document.getElementById('editStartHour'), startM: document.getElementById('editStartMinute'),
             endH: document.getElementById('editEndHour'), endM: document.getElementById('editEndMinute'),
             branch: document.getElementById('editBranch'), area: document.getElementById('editArea'),
             region: document.getElementById('editRegion'), details: document.getElementById('editDetails'),
             branchContainer: document.getElementById('edit-branch-container-wrapper')
         };
-
         initScheduleFormLogic(editElements, 'edit');
         
         editElements.date.value = data[3];
-        editElements.username.value = data[1]; // Username from schedule data
+        editElements.username.value = data[2]; // **FIX**: Use correct index for username
         editElements.branch.value = data[6];
         editElements.area.value = data[9];
         editElements.region.value = data[10];
@@ -352,7 +349,7 @@ async function handleUpdateSchedule(e){e.preventDefault();
     const endH = document.getElementById('editEndHour').value, endM = document.getElementById('editEndMinute').value;
     const startTime = (startH && startM) ? `${startH}:${startM}` : '';
     const endTime = (endH && endM) ? `${endH}:${endM}` : '';
-    const payload={id:document.getElementById('edit-id').value,workDate:document.getElementById('editDate').value,startTime:startTime,endTime:endTime,branch:document.getElementById('editBranch').value || document.getElementById('edit-leave-type')?.value,details:document.getElementById('editDetails').value,area:document.getElementById('editArea').value,region:document.getElementById('editRegion').value,username:currentUser.username};
+    const payload={id:document.getElementById('edit-id').value,workDate:document.getElementById('editDate').value,startTime:startTime,endTime:endTime,branch:document.getElementById('editBranch')?.value || document.getElementById('edit-leave-type')?.value,details:document.getElementById('editDetails').value,area:document.getElementById('editArea').value,region:document.getElementById('editRegion').value,username:currentUser.username};
     try{
         await apiCall({action:'editSchedule',payload});
         document.getElementById('editModal').classList.remove('is-active');
@@ -409,26 +406,20 @@ function showCalendarEventModal(props){
     modal.classList.add('is-active');
 }
 // --- SCHEDULE FORM & ACTIVITY LOG ---
-// **NEW**: Reusable logic for create/edit forms
 function initScheduleFormLogic(elements, mode = 'create') {
     const { period, startH, startM, endH, endM, details, branch, area, region, branchContainer } = elements;
-    
     populateHourDropdown(startH); populateMinuteDropdown(startM);
     populateHourDropdown(endH); populateMinuteDropdown(endM);
-
     const originalBranchHTML = branchContainer.innerHTML;
-
     period.addEventListener('change', (e) => {
         const value = e.target.value;
         [startH, startM, endH, endM].forEach(el => { el.disabled = false; el.required = true; });
         branchContainer.innerHTML = originalBranchHTML;
         const newBranchInput = branchContainer.querySelector('input');
-        newBranchInput.addEventListener('input', updateAreaRegion);
-        if(mode === 'edit') {
-            newBranchInput.id = 'editBranch';
-            newBranchInput.setAttribute('list', 'edit-branch-list');
+        if (newBranchInput) {
+            newBranchInput.addEventListener('input', updateAreaRegion);
+            if(mode === 'edit') { newBranchInput.id = 'editBranch'; newBranchInput.setAttribute('list', 'edit-branch-list'); }
         }
-        
         switch(value) {
             case 'morning': startH.value = '08'; startM.value = '30'; endH.value = '12'; endM.value = '00'; break;
             case 'afternoon': startH.value = '13'; startM.value = '00'; endH.value = '17'; endM.value = '30'; break;
@@ -437,23 +428,23 @@ function initScheduleFormLogic(elements, mode = 'create') {
             case 'leave':
                 [startH, startM, endH, endM].forEach(el => { el.value = ''; el.disabled = true; el.required = false; });
                 area.value = ''; region.value = '';
-                
                 const leaveSelectId = mode === 'edit' ? 'edit-leave-type' : 'schedule-leave-type';
-                branchContainer.innerHTML = `<div><label for="${leaveSelectId}" class="block text-sm font-medium">ประเภทการลา</label><select id="${leaveSelectId}" class="w-full mt-1 p-2 border rounded-md"><option value="">-- เลือกประเภท --</option><option value="ลาพักร้อน">ลาพักร้อน</option><option value="ลาป่วย">ลาป่วย</option><option value="ลากิจ">ลากิจ</option></select></div>`;
+                const leaveLabel = mode === 'edit' ? '' : `<label for="${leaveSelectId}" class="block text-sm font-medium">ประเภทการลา</label>`;
+                branchContainer.innerHTML = `<div>${leaveLabel}<select id="${leaveSelectId}" class="w-full mt-1 p-2 border rounded-md"><option value="">-- เลือกประเภท --</option><option value="ลาพักร้อน">ลาพักร้อน</option><option value="ลาป่วย">ลาป่วย</option><option value="ลากิจ">ลากิจ</option></select></div>`;
                 const leaveSelect = document.getElementById(leaveSelectId);
                 leaveSelect.addEventListener('change', () => { details.value = leaveSelect.value; });
                 break;
             default: [startH, startM, endH, endM].forEach(el => el.value = ''); break;
         }
     });
-
     const branchMap=new Map(masterData.branches.map(b=>[b[0],{area:b[1],region:b[2]}]));
     const updateAreaRegion = (e) => {
         const info=branchMap.get(e.target.value);
         area.value = info ? info.area : '';
         region.value = info ? info.region : '';
     };
-    branchContainer.querySelector('input')?.addEventListener('input', updateAreaRegion);
+    const initialBranchInput = branchContainer.querySelector('input');
+    if (initialBranchInput) initialBranchInput.addEventListener('input', updateAreaRegion);
 }
 function initScheduleFormPage(){
     const elements = {
@@ -468,7 +459,6 @@ function initScheduleFormPage(){
     elements.username.value=currentUser.username;
     elements.date.valueAsDate=new Date;
     document.getElementById('branch-list').innerHTML=masterData.branches.map(b=>`<option value="${b[0]}"></option>`).join('');
-
     initScheduleFormLogic(elements, 'create');
     document.getElementById('scheduleForm').addEventListener('submit',handleSaveSchedule);
 }
