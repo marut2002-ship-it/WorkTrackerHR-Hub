@@ -415,10 +415,8 @@ function initScheduleFormLogic(elements, mode = 'create') {
         const value = e.target.value;
         [startH, startM, endH, endM].forEach(el => { el.disabled = false; el.required = true; });
         branchContainer.innerHTML = originalBranchHTML;
-        // Re-attach event listeners for the new branch input
         const newBranchInput = branchContainer.querySelector('input');
         if (newBranchInput) {
-            newBranchInput.addEventListener('input', updateAreaRegion);
             if(mode === 'edit') { 
                 newBranchInput.id = 'editBranch'; 
                 newBranchInput.setAttribute('list', 'edit-branch-list');
@@ -435,7 +433,7 @@ function initScheduleFormLogic(elements, mode = 'create') {
                 area.value = ''; region.value = '';
                 const leaveSelectId = mode === 'edit' ? 'edit-leave-type' : 'schedule-leave-type';
                 const leaveLabel = `<label for="${leaveSelectId}" class="block text-sm font-medium">ประเภทการลา</label>`;
-                branchContainer.innerHTML = `<div>${leaveLabel}<select id="${leaveSelectId}" class="w-full mt-1 p-2 border rounded-md"><option value="">-- เลือกประเภท --</option><option value="ลาพักร้อน">ลาพักร้อน</option><option value="ลาป่วย">ลาป่วย</option><option value="ลากิจ">ลากิจ</option></select></div>`;
+                branchContainer.innerHTML = `<div>${leaveLabel}<select id="${leaveSelectId}" class="w-full mt-1 p-2 border rounded-md" required><option value="">-- เลือกประเภท --</option><option value="ลาพักร้อน">ลาพักร้อน</option><option value="ลาป่วย">ลาป่วย</option><option value="ลากิจ">ลากิจ</option></select></div>`;
                 const leaveSelect = document.getElementById(leaveSelectId);
                 leaveSelect.addEventListener('change', () => { details.value = leaveSelect.value; });
                 break;
@@ -448,7 +446,6 @@ function initScheduleFormLogic(elements, mode = 'create') {
         area.value = info ? info.area : '';
         region.value = info ? info.region : '';
     };
-    // **FIX**: Attach listener to the correct branch input, regardless of when it's created.
     branchContainer.addEventListener('input', (e) => {
         if (e.target.matches('input[list]')) {
              updateAreaRegion(e);
