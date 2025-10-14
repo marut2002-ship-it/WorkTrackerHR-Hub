@@ -46,7 +46,7 @@
             </form>
             <div id="loginError" class="mt-4 p-3 bg-red-100 text-red-700 rounded-xl hidden"></div>
         </div>
-        <p class="text-center text-xs text-gray-400 mt-4">Version 8.2 (Edit Form Fixes)</p>
+        <p class="text-center text-xs text-gray-400 mt-4">Version 8.3 (Edit Branch Fix)</p>
     </div>
     <div id="mainApp" class="hidden" x-data="{ navOpen: false }">
         <nav class="bg-white shadow-sm border-b sticky top-0 z-20">
@@ -331,7 +331,7 @@ async function openEditModal(id){
         initScheduleFormLogic(editElements, 'edit');
         
         editElements.date.value = data[3];
-        editElements.username.value = data[2]; // **FIX**: Use correct index for username
+        editElements.username.value = data[2];
         editElements.branch.value = data[6];
         editElements.area.value = data[9];
         editElements.region.value = data[10];
@@ -407,7 +407,7 @@ function showCalendarEventModal(props){
 }
 // --- SCHEDULE FORM & ACTIVITY LOG ---
 function initScheduleFormLogic(elements, mode = 'create') {
-    const { period, startH, startM, endH, endM, details, branch, area, region, branchContainer } = elements;
+    const { period, startH, startM, endH, endM, details, area, region, branchContainer } = elements;
     populateHourDropdown(startH); populateMinuteDropdown(startM);
     populateHourDropdown(endH); populateMinuteDropdown(endM);
     const originalBranchHTML = branchContainer.innerHTML;
@@ -415,10 +415,15 @@ function initScheduleFormLogic(elements, mode = 'create') {
         const value = e.target.value;
         [startH, startM, endH, endM].forEach(el => { el.disabled = false; el.required = true; });
         branchContainer.innerHTML = originalBranchHTML;
+        // Re-attach event listeners for the new branch input
         const newBranchInput = branchContainer.querySelector('input');
         if (newBranchInput) {
             newBranchInput.addEventListener('input', updateAreaRegion);
-            if(mode === 'edit') { newBranchInput.id = 'editBranch'; newBranchInput.setAttribute('list', 'edit-branch-list'); }
+            if(mode === 'edit') { 
+                newBranchInput.id = 'editBranch'; 
+                newBranchInput.setAttribute('list', 'edit-branch-list');
+                document.getElementById('edit-branch-list').innerHTML = masterData.branches.map(b=>`<option value="${b[0]}"></option>`).join('');
+            }
         }
         switch(value) {
             case 'morning': startH.value = '08'; startM.value = '30'; endH.value = '12'; endM.value = '00'; break;
@@ -429,7 +434,7 @@ function initScheduleFormLogic(elements, mode = 'create') {
                 [startH, startM, endH, endM].forEach(el => { el.value = ''; el.disabled = true; el.required = false; });
                 area.value = ''; region.value = '';
                 const leaveSelectId = mode === 'edit' ? 'edit-leave-type' : 'schedule-leave-type';
-                const leaveLabel = mode === 'edit' ? '' : `<label for="${leaveSelectId}" class="block text-sm font-medium">ประเภทการลา</label>`;
+                const leaveLabel = `<label for="${leaveSelectId}" class="block text-sm font-medium">ประเภทการลา</label>`;
                 branchContainer.innerHTML = `<div>${leaveLabel}<select id="${leaveSelectId}" class="w-full mt-1 p-2 border rounded-md"><option value="">-- เลือกประเภท --</option><option value="ลาพักร้อน">ลาพักร้อน</option><option value="ลาป่วย">ลาป่วย</option><option value="ลากิจ">ลากิจ</option></select></div>`;
                 const leaveSelect = document.getElementById(leaveSelectId);
                 leaveSelect.addEventListener('change', () => { details.value = leaveSelect.value; });
@@ -443,8 +448,12 @@ function initScheduleFormLogic(elements, mode = 'create') {
         area.value = info ? info.area : '';
         region.value = info ? info.region : '';
     };
-    const initialBranchInput = branchContainer.querySelector('input');
-    if (initialBranchInput) initialBranchInput.addEventListener('input', updateAreaRegion);
+    // **FIX**: Attach listener to the correct branch input, regardless of when it's created.
+    branchContainer.addEventListener('input', (e) => {
+        if (e.target.matches('input[list]')) {
+             updateAreaRegion(e);
+        }
+    });
 }
 function initScheduleFormPage(){
     const elements = {
