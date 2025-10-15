@@ -313,8 +313,10 @@ async function openEditModal(id){
             const el = form.querySelector(`#schedule${f}`);
             if(el) el.id = `edit${f}`;
         });
-        form.querySelector('datalist').id = 'edit-branch-list';
-        form.querySelector('[list="branch-list"]').setAttribute('list', 'edit-branch-list');
+        const datalist = form.querySelector('datalist');
+        if (datalist) datalist.id = 'edit-branch-list';
+        const branchInput = form.querySelector('[list="branch-list"]');
+        if (branchInput) branchInput.setAttribute('list', 'edit-branch-list');
         form.querySelector('#branch-container-wrapper').id = 'edit-branch-container-wrapper';
 
         form.insertAdjacentHTML('afterbegin', `<input type="hidden" id="edit-id" value="${data[0]}">`);
@@ -331,7 +333,7 @@ async function openEditModal(id){
         initScheduleFormLogic(editElements, 'edit');
         
         editElements.date.value = data[3];
-        editElements.username.value = data[2];
+        editElements.username.value = data[2]; 
         editElements.branch.value = data[6];
         editElements.area.value = data[9];
         editElements.region.value = data[10];
