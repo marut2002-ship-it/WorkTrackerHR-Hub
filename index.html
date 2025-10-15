@@ -309,9 +309,14 @@ async function openEditModal(id){
         const form=document.getElementById('editScheduleForm');
         form.innerHTML=getPageHTML('scheduleForm').match(/<form id="scheduleForm"[\s\S]*?<\/form>/)[0].replace(/schedule/g, 'edit');
         
-        form.querySelector('datalist').id = 'edit-branch-list';
-        form.querySelector('[list="branch-list"]').setAttribute('list', 'edit-branch-list');
-
+        const datalist = form.querySelector('datalist');
+        if (datalist) {
+            datalist.id = 'edit-branch-list';
+            datalist.innerHTML = masterData.branches.map(b=>`<option value="${b[0]}"></option>`).join('');
+        }
+        const branchInput = form.querySelector('[list="branch-list"]');
+        if (branchInput) branchInput.setAttribute('list', 'edit-branch-list');
+        
         form.insertAdjacentHTML('afterbegin', `<input type="hidden" id="edit-id" value="${data[0]}">`);
 
         const editElements = {
@@ -326,7 +331,7 @@ async function openEditModal(id){
         initScheduleFormLogic(editElements, 'edit');
         
         editElements.date.value = data[3];
-        editElements.username.value = data[2]; // **FIX**: Use correct index for username
+        editElements.username.value = data[2]; 
         editElements.branch.value = data[6];
         editElements.area.value = data[9];
         editElements.region.value = data[10];
@@ -415,9 +420,11 @@ function initScheduleFormLogic(elements, mode = 'create') {
             if(mode === 'edit') { 
                 newBranchInput.id = 'editBranch'; 
                 const datalist = branchContainer.querySelector('datalist');
-                datalist.id = 'edit-branch-list';
-                newBranchInput.setAttribute('list', 'edit-branch-list');
-                datalist.innerHTML = masterData.branches.map(b=>`<option value="${b[0]}"></option>`).join('');
+                if (datalist) {
+                    datalist.id = 'edit-branch-list';
+                    newBranchInput.setAttribute('list', 'edit-branch-list');
+                    datalist.innerHTML = masterData.branches.map(b=>`<option value="${b[0]}"></option>`).join('');
+                }
             }
         }
         switch(value) {
