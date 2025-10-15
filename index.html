@@ -46,7 +46,7 @@
             </form>
             <div id="loginError" class="mt-4 p-3 bg-red-100 text-red-700 rounded-xl hidden"></div>
         </div>
-        <p class="text-center text-xs text-gray-400 mt-4">Version 8.3 (Edit Branch Fix)</p>
+        <p class="text-center text-xs text-gray-400 mt-4">Version 8.4 (Final Edit Fix)</p>
     </div>
     <div id="mainApp" class="hidden" x-data="{ navOpen: false }">
         <nav class="bg-white shadow-sm border-b sticky top-0 z-20">
@@ -307,17 +307,10 @@ async function openEditModal(id){
         if(currentUser.role.toLowerCase()==='employee' && workDate < sevenDaysAgo){Swal.fire('ผิดพลาด', 'ไม่สามารถแก้ไขข้อมูลที่เก่ากว่า 7 วันได้', 'error');return;}
         const modal=document.getElementById('editModal');
         const form=document.getElementById('editScheduleForm');
-        form.innerHTML=getPageHTML('scheduleForm').match(/<form id="scheduleForm"[\s\S]*?<\/form>/)[0].replace('scheduleForm', 'editForm');
+        form.innerHTML=getPageHTML('scheduleForm').match(/<form id="scheduleForm"[\s\S]*?<\/form>/)[0].replace(/schedule/g, 'edit');
         
-        ['Date', 'Username', 'Period', 'StartHour', 'StartMinute', 'EndHour', 'EndMinute', 'Branch', 'Area', 'Region', 'Details'].forEach(f => {
-            const el = form.querySelector(`#schedule${f}`);
-            if(el) el.id = `edit${f}`;
-        });
-        const datalist = form.querySelector('datalist');
-        if (datalist) datalist.id = 'edit-branch-list';
-        const branchInput = form.querySelector('[list="branch-list"]');
-        if (branchInput) branchInput.setAttribute('list', 'edit-branch-list');
-        form.querySelector('#branch-container-wrapper').id = 'edit-branch-container-wrapper';
+        form.querySelector('datalist').id = 'edit-branch-list';
+        form.querySelector('[list="branch-list"]').setAttribute('list', 'edit-branch-list');
 
         form.insertAdjacentHTML('afterbegin', `<input type="hidden" id="edit-id" value="${data[0]}">`);
 
@@ -333,7 +326,7 @@ async function openEditModal(id){
         initScheduleFormLogic(editElements, 'edit');
         
         editElements.date.value = data[3];
-        editElements.username.value = data[2]; 
+        editElements.username.value = data[2]; // **FIX**: Use correct index for username
         editElements.branch.value = data[6];
         editElements.area.value = data[9];
         editElements.region.value = data[10];
@@ -351,7 +344,7 @@ async function handleUpdateSchedule(e){e.preventDefault();
     const endH = document.getElementById('editEndHour').value, endM = document.getElementById('editEndMinute').value;
     const startTime = (startH && startM) ? `${startH}:${startM}` : '';
     const endTime = (endH && endM) ? `${endH}:${endM}` : '';
-    const payload={id:document.getElementById('edit-id').value,workDate:document.getElementById('editDate').value,startTime:startTime,endTime:endTime,branch:document.getElementById('editBranch')?.value || document.getElementById('edit-leave-type')?.value,details:document.getElementById('editDetails').value,area:document.getElementById('editArea').value,region:document.getElementById('editRegion').value,username:currentUser.username};
+    const payload={id:document.getElementById('edit-id').value,workDate:document.getElementById('editDate').value,startTime:startTime,endTime:endTime,branch:document.getElementById('editBranch')?.value || document.getElementById('edit-leave-type')?.value,details:document.getElementById('editDetails').value,area:document.getElementById('editArea').value,region:document.getElementById('editRegion').value,username:document.getElementById('editUsername').value};
     try{
         await apiCall({action:'editSchedule',payload});
         document.getElementById('editModal').classList.remove('is-active');
@@ -421,8 +414,10 @@ function initScheduleFormLogic(elements, mode = 'create') {
         if (newBranchInput) {
             if(mode === 'edit') { 
                 newBranchInput.id = 'editBranch'; 
+                const datalist = branchContainer.querySelector('datalist');
+                datalist.id = 'edit-branch-list';
                 newBranchInput.setAttribute('list', 'edit-branch-list');
-                document.getElementById('edit-branch-list').innerHTML = masterData.branches.map(b=>`<option value="${b[0]}"></option>`).join('');
+                datalist.innerHTML = masterData.branches.map(b=>`<option value="${b[0]}"></option>`).join('');
             }
         }
         switch(value) {
