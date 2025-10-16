@@ -412,23 +412,25 @@ function initScheduleFormLogic(elements, mode = 'create') {
     const { period, startH, startM, endH, endM, details, area, region, branchContainer } = elements;
     populateHourDropdown(startH); populateMinuteDropdown(startM);
     populateHourDropdown(endH); populateMinuteDropdown(endM);
+    
+    if(mode === 'edit') {
+        const datalist = branchContainer.querySelector('datalist');
+        if (datalist) datalist.innerHTML = masterData.branches.map(b=>`<option value="${b[0]}"></option>`).join('');
+    }
+    
     const originalBranchHTML = branchContainer.innerHTML;
+
     period.addEventListener('change', (e) => {
         const value = e.target.value;
         [startH, startM, endH, endM].forEach(el => { el.disabled = false; el.required = true; });
         branchContainer.innerHTML = originalBranchHTML;
+        
         const newBranchInput = branchContainer.querySelector('input');
-        if (newBranchInput) {
-            if(mode === 'edit') { 
-                newBranchInput.id = 'editBranch'; 
-                const datalist = branchContainer.querySelector('datalist');
-                if (datalist) {
-                    datalist.id = 'edit-branch-list';
-                    newBranchInput.setAttribute('list', 'edit-branch-list');
-                    datalist.innerHTML = masterData.branches.map(b=>`<option value="${b[0]}"></option>`).join('');
-                }
-            }
+        if (newBranchInput && mode === 'edit') {
+            const datalist = branchContainer.querySelector('datalist');
+            if(datalist) datalist.innerHTML = masterData.branches.map(b=>`<option value="${b[0]}"></option>`).join('');
         }
+
         switch(value) {
             case 'morning': startH.value = '08'; startM.value = '30'; endH.value = '12'; endM.value = '00'; break;
             case 'afternoon': startH.value = '13'; startM.value = '00'; endH.value = '17'; endM.value = '30'; break;
@@ -446,6 +448,7 @@ function initScheduleFormLogic(elements, mode = 'create') {
             default: [startH, startM, endH, endM].forEach(el => el.value = ''); break;
         }
     });
+
     const branchMap=new Map(masterData.branches.map(b=>[b[0],{area:b[1],region:b[2]}]));
     const updateAreaRegion = (e) => {
         const info=branchMap.get(e.target.value);
@@ -464,8 +467,8 @@ function initScheduleFormPage(){
         period: document.getElementById('schedulePeriod'),
         startH: document.getElementById('scheduleStartHour'), startM: document.getElementById('scheduleStartMinute'),
         endH: document.getElementById('scheduleEndHour'), endM: document.getElementById('scheduleEndMinute'),
-        branch: document.getElementById('scheduleBranch'), area: document.getElementById('scheduleArea'),
-        region: document.getElementById('scheduleRegion'), details: document.getElementById('scheduleDetails'),
+        area: document.getElementById('scheduleArea'), region: document.getElementById('scheduleRegion'), 
+        details: document.getElementById('scheduleDetails'),
         branchContainer: document.getElementById('branch-container-wrapper')
     };
     elements.username.value=currentUser.username;
