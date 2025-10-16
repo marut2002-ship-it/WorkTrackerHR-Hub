@@ -46,7 +46,7 @@
             </form>
             <div id="loginError" class="mt-4 p-3 bg-red-100 text-red-700 rounded-xl hidden"></div>
         </div>
-        <p class="text-center text-xs text-gray-400 mt-4">Version 8.5 (Area/Region Update Fix)</p>
+        <p class="text-center text-xs text-gray-400 mt-4">Version 8.4 (Final Edit Fix)</p>
     </div>
     <div id="mainApp" class="hidden" x-data="{ navOpen: false }">
         <nav class="bg-white shadow-sm border-b sticky top-0 z-20">
@@ -412,23 +412,25 @@ function initScheduleFormLogic(elements, mode = 'create') {
     const { period, startH, startM, endH, endM, details, area, region, branchContainer } = elements;
     populateHourDropdown(startH); populateMinuteDropdown(startM);
     populateHourDropdown(endH); populateMinuteDropdown(endM);
+    
+    // **FIX**: Populate datalist specifically for edit mode right away
+    if(mode === 'edit') {
+        const datalist = branchContainer.querySelector('datalist');
+        if (datalist) datalist.innerHTML = masterData.branches.map(b=>`<option value="${b[0]}"></option>`).join('');
+    }
+    
     const originalBranchHTML = branchContainer.innerHTML;
     period.addEventListener('change', (e) => {
         const value = e.target.value;
         [startH, startM, endH, endM].forEach(el => { el.disabled = false; el.required = true; });
         branchContainer.innerHTML = originalBranchHTML;
+        
         const newBranchInput = branchContainer.querySelector('input');
-        if (newBranchInput) {
-            if(mode === 'edit') { 
-                newBranchInput.id = 'editBranch'; 
-                const datalist = branchContainer.querySelector('datalist');
-                if (datalist) {
-                    datalist.id = 'edit-branch-list';
-                    newBranchInput.setAttribute('list', 'edit-branch-list');
-                    datalist.innerHTML = masterData.branches.map(b=>`<option value="${b[0]}"></option>`).join('');
-                }
-            }
+        if (newBranchInput && mode === 'edit') {
+            const datalist = branchContainer.querySelector('datalist');
+            if(datalist) datalist.innerHTML = masterData.branches.map(b=>`<option value="${b[0]}"></option>`).join('');
         }
+
         switch(value) {
             case 'morning': startH.value = '08'; startM.value = '30'; endH.value = '12'; endM.value = '00'; break;
             case 'afternoon': startH.value = '13'; startM.value = '00'; endH.value = '17'; endM.value = '30'; break;
