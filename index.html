@@ -46,7 +46,7 @@
             </form>
             <div id="loginError" class="mt-4 p-3 bg-red-100 text-red-700 rounded-xl hidden"></div>
         </div>
-        <p class="text-center text-xs text-gray-400 mt-4">Version 8.4 (Final Edit Fix)</p>
+        <p class="text-center text-xs text-gray-400 mt-4">Version 8.5 (Final Edit Fix)</p>
     </div>
     <div id="mainApp" class="hidden" x-data="{ navOpen: false }">
         <nav class="bg-white shadow-sm border-b sticky top-0 z-20">
@@ -326,15 +326,15 @@ async function openEditModal(id){
             period: document.getElementById('editPeriod'),
             startH: document.getElementById('editStartHour'), startM: document.getElementById('editStartMinute'),
             endH: document.getElementById('editEndHour'), endM: document.getElementById('editEndMinute'),
-            branch: document.getElementById('editBranch'), area: document.getElementById('editArea'),
-            region: document.getElementById('editRegion'), details: document.getElementById('editDetails'),
+            area: document.getElementById('editArea'), region: document.getElementById('editRegion'), 
+            details: document.getElementById('editDetails'),
             branchContainer: document.getElementById('edit-branch-container-wrapper')
         };
         initScheduleFormLogic(editElements, 'edit');
         
         editElements.date.value = data[3];
-        editElements.username.value = data[2]; 
-        editElements.branch.value = data[6];
+        editElements.username.value = data[2];
+        document.getElementById('editBranch').value = data[6];
         editElements.area.value = data[9];
         editElements.region.value = data[10];
         editElements.details.value = data[7] || '';
