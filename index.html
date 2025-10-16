@@ -307,17 +307,19 @@ async function openEditModal(id){
         if(currentUser.role.toLowerCase()==='employee' && workDate < sevenDaysAgo){Swal.fire('ผิดพลาด', 'ไม่สามารถแก้ไขข้อมูลที่เก่ากว่า 7 วันได้', 'error');return;}
         const modal=document.getElementById('editModal');
         const form=document.getElementById('editScheduleForm');
-        form.innerHTML=getPageHTML('scheduleForm').match(/<form id="scheduleForm"[\s\S]*?<\/form>/)[0].replace(/schedule/g, 'edit');
-        
-        const datalist = form.querySelector('datalist');
-        if (datalist) {
-            datalist.id = 'edit-branch-list';
-            datalist.innerHTML = masterData.branches.map(b=>`<option value="${b[0]}"></option>`).join('');
-        }
-        const branchInput = form.querySelector('[list="branch-list"]');
-        if (branchInput) branchInput.setAttribute('list', 'edit-branch-list');
-        
-        form.insertAdjacentHTML('afterbegin', `<input type="hidden" id="edit-id" value="${data[0]}">`);
+        // **FIX**: Build the form from scratch to avoid complexity
+        form.innerHTML = `
+            <input type="hidden" id="edit-id" value="${data[0]}">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div><label for="editDate" class="block text-sm font-medium">วันที่ปฏิบัติงาน</label><input type="date" id="editDate" class="w-full mt-1 p-2 border rounded-md" required></div>
+                <div><label for="editUsername" class="block text-sm font-medium">Username</label><input type="text" id="editUsername" class="w-full mt-1 p-2 border bg-gray-100 rounded-md" readonly></div>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6"><div><label for="editPeriod" class="block text-sm font-medium">ช่วงเวลา</label><select id="editPeriod" class="w-full mt-1 p-2 border rounded-md"><option value="">-- เลือกช่วงเวลา --</option><option value="morning">ครึ่งวันเช้า (08:30-12:00)</option><option value="afternoon">ครึ่งวันบ่าย (13:00-17:30)</option><option value="evening">ช่วงเย็น (16:30-18:30)</option><option value="full">ทั้งวัน (08:30-17:30)</option><option value="leave">วันลา</option></select></div></div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6"><div><label for="editStartHour" class="block text-sm font-medium">เวลาเริ่มงาน</label><div class="flex items-center gap-2 mt-1"><select id="editStartHour" class="w-full p-2 border rounded-md" required></select><span class="font-bold">:</span><select id="editStartMinute" class="w-full p-2 border rounded-md" required></select></div></div><div><label for="editEndHour" class="block text-sm font-medium">เวลาเลิกงาน</label><div class="flex items-center gap-2 mt-1"><select id="editEndHour" class="w-full p-2 border rounded-md" required></select><span class="font-bold">:</span><select id="editEndMinute" class="w-full p-2 border rounded-md" required></select></div></div></div>
+            <div id="edit-branch-container-wrapper"><div><label for="editBranch" class="block text-sm font-medium">สาขา</label><input list="edit-branch-list" id="editBranch" class="w-full mt-1 p-2 border rounded-md" placeholder="พิมพ์เพื่อค้นหา..." required><datalist id="edit-branch-list"></datalist></div></div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6"><div><label class="block text-sm font-medium">เขต</label><input type="text" id="editArea" class="w-full mt-1 p-2 border bg-gray-100 rounded-md" readonly></div><div><label for="editRegion" class="block text-sm font-medium">ภาค</label><input type="text" id="editRegion" class="w-full mt-1 p-2 border bg-gray-100 rounded-md" readonly></div></div>
+            <div><label for="editDetails" class="block text-sm font-medium">รายละเอียดงาน</label><textarea id="editDetails" rows="3" class="w-full mt-1 p-2 border rounded-md"></textarea></div>
+            <div class="flex justify-end"><button type="submit" class="px-6 py-3 bg-primary text-white rounded-xl">บันทึก</button></div>`;
 
         const editElements = {
             date: document.getElementById('editDate'), username: document.getElementById('editUsername'),
