@@ -18,13 +18,11 @@
     <style>
         .fade-in{animation:fadeIn .3s ease-in}@keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}.loading{animation:spin 1s linear infinite}@keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}.modal{display:none}.modal.is-active{display:flex}.dense-table td,.dense-table th{padding:.5rem .75rem}:root{--fc-border-color:#e5e7eb;--fc-list-event-hover-bg-color:#f9fafb;--fc-event-border-radius:4px;--fc-event-font-size:.8em;--fc-event-padding-block:2px;--fc-event-padding-inline:6px}.fc .fc-toolbar-title{font-size:1.25rem;font-weight:600}.fc .fc-button-primary{background-color:#fff;border-color:#d1d5db;color:#374151}.fc .fc-button-primary:hover{background-color:#f9fafb}.fc .fc-button-primary:active,.fc .fc-button-primary:focus{box-shadow:none}.fc .fc-button-primary.fc-button-active{background-color:#EFF6FF;border-color:#3B82F6;color:#3B82F6}.fc .fc-day-today{background-color:#f9fafb!important}
         html.dark{color-scheme:dark}.dark body{background-color:#111827}.dark .bg-white{background-color:#1f2937}.dark .bg-gray-50{background-color:#111827}.dark .text-gray-800,.dark .text-xl,.dark .text-2xl,.dark .text-3xl{color:#f9fafb}.dark .text-gray-500,.dark .text-gray-600,.dark .text-gray-700{color:#9ca3af}.dark .border,.dark .divide-y>:not([hidden])~:not([hidden]){border-color:#374151}.dark .shadow-sm,.dark .shadow-md{box-shadow:0 1px 2px 0 rgba(255,255,255,.05)}.dark .bg-gray-100{background-color:#374151}.dark .bg-gray-50{background-color:#1f2937}.dark .nav-btn.text-primary{background-color:rgba(59,130,246,.1)}.dark .fc .fc-button-primary{background-color:#374151;border-color:#4b5563;color:#e5e7eb}.dark .fc .fc-day-today{background-color:#1f2937!important}.dark input,.dark select,.dark textarea{background-color:#374151;border-color:#4b5563;color:#f9fafb;border-radius: 0.5rem;}.dark input::placeholder{color:#9ca3af}.dark .swal2-popup{background-color:#1f2937;color:#f9fafb}.dark .swal2-title{color:#f9fafb}.dark .swal2-html-container{color:#d1d5db}
-        /* Dashboard Styles */
         .stats-card { transition: all 0.3s ease; } .stats-card:hover { transform: translateY(-5px); box-shadow: 0 10px 15px -3px rgba(0,0,0,.1), 0 4px 6px -4px rgba(0,0,0,.1); }
         .dark .stats-card:hover { box-shadow: 0 10px 15px -3px rgba(0,0,0,.3), 0 4px 6px -4px rgba(0,0,0,.3); }
         .table-header-custom { background-color: #F9FAFB; } .dark .table-header-custom { background-color: #1f2937; border-bottom: 1px solid #374151;}
         tbody tr:nth-child(even) { background-color: #F9FAFB; } .dark tbody tr:nth-child(even) { background-color: #1f2937; }
         tbody tr:hover { background-color: #F3F4F6; } .dark tbody tr:hover { background-color: #374151; }
-        /* Calendar Styles */
         .fc .fc-daygrid-event { padding: 4px 6px; border-radius: 6px; color: white; overflow: hidden; transition: all 0.2s ease-in-out; border: none; }
         .fc .fc-daygrid-event:hover { transform: scale(1.05); box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
         .fc-event-custom { font-size: 0.75rem; line-height: 1.2; }
@@ -35,7 +33,6 @@
     </style>
 </head>
 <body class="bg-gray-50 font-sans">
-    <!-- Login Page -->
     <div id="loginPage" class="min-h-screen flex flex-col items-center justify-center p-4">
         <div class="bg-white rounded-2xl shadow-xl p-8 w-full max-w-md fade-in">
              <div class="text-center mb-8"><div class="w-16 h-16 bg-gradient-to-r from-primary to-secondary rounded-full mx-auto mb-4 flex items-center justify-center"><svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg></div><h1 class="text-2xl font-bold text-gray-800">Work Tracker</h1><p class="text-gray-600 mt-2">เข้าสู่ระบบเพื่อจัดการงานของคุณ</p></div>
@@ -46,7 +43,7 @@
             </form>
             <div id="loginError" class="mt-4 p-3 bg-red-100 text-red-700 rounded-xl hidden"></div>
         </div>
-        <p class="text-center text-xs text-gray-400 mt-4">Version 8.5 (Final Edit Fix)</p>
+        <p class="text-center text-xs text-gray-400 mt-4">Version 8.6 (Date Logic Fix)</p>
     </div>
     <div id="mainApp" class="hidden" x-data="{ navOpen: false }">
         <nav class="bg-white shadow-sm border-b sticky top-0 z-20">
@@ -93,10 +90,11 @@
 
 <script>
 // ####################################################################
-// ##  SCRIPT URL ใหม่ของคุณ ##
+// ## SCRIPT URL (Make sure this is correct)
 // ####################################################################
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbywI21UxD-mVY9Gx743y-uRRJfGv_IPTGBgP2AnC6-N_ERy7xs1TLoMnGxrsHYl2HXG/exec'; 
 // ####################################################################
+const EDIT_DELETE_WINDOW_DAYS = 7; // Should match the value in Code.gs
 
 let currentUser = null,fullCalendarInstance = null,masterData = { schedules: [], branches: [], users: [] };
 // --- INITIALIZATION ---
@@ -183,22 +181,9 @@ const hexToRgba = (hex, alpha) => {
 const stringToColor=(str)=>{if(!str)return'#808080';let hash=0;for(let i=0;i<str.length;i++){hash=str.charCodeAt(i)+((hash<<5)-hash)}
 let color='#';for(let i=0;i<3;i++){const value=(hash>>(i*8))&0xFF;color+=('00'+value.toString(16)).substr(-2)}
 return color};
-const formatDateForInput=(date)=>{if(!date)return'';const d=new Date(date);const year=d.getFullYear();const month=('0'+(d.getMonth()+1)).slice(-2);const day=('0'+d.getDate()).slice(-2);return`${year}-${month}-${day}`};
 const formatDateForDisplay=(isoDateString)=>{if(!isoDateString||typeof isoDateString!=='string'||!isoDateString.includes('-'))return"Invalid Date";try{const date=new Date(isoDateString);if(isNaN(date.getTime()))return"Invalid Date";return new Date(date.getTime()+date.getTimezoneOffset()*60*100).toLocaleDateString('th-TH',{day:'2-digit',month:'2-digit',year:'numeric'})}catch(e){return"Invalid Date"}};
-const populateHourDropdown = (selectElement) => {
-    selectElement.innerHTML = '<option value="">ชม.</option>';
-    for (let h = 0; h < 24; h++) {
-        const hour = h.toString().padStart(2, '0');
-        selectElement.innerHTML += `<option value="${hour}">${hour}</option>`;
-    }
-};
-const populateMinuteDropdown = (selectElement) => {
-    selectElement.innerHTML = '<option value="">นาที</option>';
-    for (let m = 0; m < 60; m += 10) {
-        const minute = m.toString().padStart(2, '0');
-        selectElement.innerHTML += `<option value="${minute}">${minute}</option>`;
-    }
-};
+const populateHourDropdown=(selectElement)=>{selectElement.innerHTML='<option value="">ชม.</option>';for(let h=0;h<24;h++){const hour=h.toString().padStart(2,'0');selectElement.innerHTML+=`<option value="${hour}">${hour}</option>`}};
+const populateMinuteDropdown=(selectElement)=>{selectElement.innerHTML='<option value="">นาที</option>';for(let m=0;m<60;m+=10){const minute=m.toString().padStart(2,'0');selectElement.innerHTML+=`<option value="${minute}">${minute}</option>`}};
 async function handleLogin(e){e.preventDefault();const loginBtn=document.getElementById('loginBtn'),loginText=document.getElementById('loginText'),loginSpinner=document.getElementById('loginSpinner'),loginError=document.getElementById('loginError');loginText.classList.add('hidden');loginSpinner.classList.remove('hidden');loginBtn.disabled=true;loginError.classList.add('hidden');try{const username=document.getElementById('username').value,password=document.getElementById('password').value,response=await apiCall({action:'login',username:username,password:password});currentUser=response.user;sessionStorage.setItem('currentUser',JSON.stringify(currentUser));initializeApp()}catch(error){loginError.textContent='ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง';loginError.classList.remove('hidden')}finally{loginText.classList.remove('hidden');loginSpinner.classList.add('hidden');loginBtn.disabled=false}}
 function logout(){sessionStorage.removeItem('currentUser');location.reload()}
 function togglePasswordVisibility(){const passwordInput=document.getElementById('password');const icon=this.querySelector('i');const type=passwordInput.getAttribute('type')==='password'?'text':'password';passwordInput.setAttribute('type',type);icon.classList.toggle('fa-eye');icon.classList.toggle('fa-eye-slash')}
@@ -234,6 +219,9 @@ function setupDashboardFilters() {
     });
     renderDashboardTable();
 }
+// ==========================================================
+//  *** START: REVISED DATE LOGIC FOR FRONTEND ***
+// ==========================================================
 function renderDashboardTable(){
     const filters = {
         month: document.getElementById('filter-month').value, date: document.getElementById('filter-date').value,
@@ -249,33 +237,51 @@ function renderDashboardTable(){
     if (filters.branch) { filteredData = filteredData.filter(row => row[6] === filters.branch); }
     if (filters.employee) { filteredData = filteredData.filter(row => row[11] === filters.employee); }
     updateStatsCards(filteredData);
-    const tableBody=document.getElementById('dashboard-table-body');
-    if(filteredData.length===0){ tableBody.innerHTML=`<tr><td colspan="6" class="p-8 text-center text-gray-500">ไม่พบข้อมูลตามเงื่อนไขที่เลือก</td></tr>`; return; }
-    const today=new Date(); today.setHours(0,0,0,0);
-    const sevenDaysAgo = new Date(today); sevenDaysAgo.setDate(today.getDate() - 7);
-    tableBody.innerHTML=filteredData.sort((a, b) => new Date(b[3]) - new Date(a[3])).map(row=>{
-    const[id,ts,user,date,st,et,branch,details,status,area,region,nickname]=row;
+    
+    const tableBody = document.getElementById('dashboard-table-body');
+    if(filteredData.length === 0){ tableBody.innerHTML=`<tr><td colspan="6" class="p-8 text-center text-gray-500">ไม่พบข้อมูลตามเงื่อนไขที่เลือก</td></tr>`; return; }
 
-    // ----- START: EDIT THIS PART -----
-    // Normalize today's date to midnight
+    // --- Create a single, reliable cutoff date for comparison ---
     const today = new Date();
     today.setHours(0, 0, 0, 0);
+    const cutoffDate = new Date(today);
+    cutoffDate.setDate(cutoffDate.getDate() - EDIT_DELETE_WINDOW_DAYS);
+    const cutoffDateTime = cutoffDate.getTime();
+    
+    tableBody.innerHTML = filteredData.sort((a, b) => new Date(b[3]) - new Date(a[3])).map(row => {
+        const [id, ts, user, date, st, et, branch, details, status, area, region, nickname] = row;
+        
+        let canManage = true;
+        if (currentUser.role.toLowerCase() === 'employee') {
+            if (!date) { // If date is somehow empty, disallow management
+                canManage = false;
+            } else {
+                // Normalize workDate from string "yyyy-mm-dd" for accurate comparison
+                const parts = date.split('-').map(Number); // e.g., [2025, 10, 17]
+                const workDate = new Date(parts[0], parts[1] - 1, parts[2]); // Month is 0-indexed
+                const workDateTime = workDate.getTime();
+                
+                canManage = workDateTime >= cutoffDateTime;
+            }
+        }
 
-    const sevenDaysAgo = new Date(today);
-    sevenDaysAgo.setDate(today.getDate() - 7);
-
-    // Normalize workDate from string "yyyy-mm-dd" to a proper Date object at midnight
-    // This avoids timezone issues where '2025-10-17' becomes '2025-10-16T17:00:00.000Z'
-    const parts = date.split('-').map(Number); // [2025, 10, 17]
-    const workDate = new Date(parts[0], parts[1] - 1, parts[2]); // Month is 0-indexed
-
-    const cannotEdit = workDate < sevenDaysAgo;
-    const canManage = currentUser.role.toLowerCase() !== 'employee' || !cannotEdit;
-    // ----- END: EDIT THIS PART -----
-
-    return`<tr><td class="p-3 text-sm">${formatDateForDisplay(date)}</td><td class="p-3 text-sm">${nickname}</td><td class="p-3 text-sm">${branch}</td><td class="p-3 text-sm">${area}</td><td class="p-3 text-sm">${region}</td><td class="p-3 text-sm text-center whitespace-nowrap space-x-2"><button onclick="openViewModal('${id}')" class="text-gray-500 hover:text-primary p-1" title="ดู"><i class="fas fa-eye"></i></button><button onclick="openEditModal('${id}')" class="text-blue-500 hover:text-blue-700 p-1 ${!canManage?'opacity-50 cursor-not-allowed':''}" ${!canManage?'disabled':''} title="แก้ไข"><i class="fas fa-pen-to-square"></i></button><button onclick="handleDelete('${id}')" class="text-red-500 hover:text-red-700 p-1 ${!canManage?'opacity-50 cursor-not-allowed':''}" ${!canManage?'disabled':''} title="ลบ"><i class="fas fa-trash-can"></i></button></td></tr>`
-}).join('');
+        return `<tr>
+            <td class="p-3 text-sm">${formatDateForDisplay(date)}</td>
+            <td class="p-3 text-sm">${nickname}</td>
+            <td class="p-3 text-sm">${branch}</td>
+            <td class="p-3 text-sm">${area}</td>
+            <td class="p-3 text-sm">${region}</td>
+            <td class="p-3 text-sm text-center whitespace-nowrap space-x-2">
+                <button onclick="openViewModal('${id}')" class="text-gray-500 hover:text-primary p-1" title="ดู"><i class="fas fa-eye"></i></button>
+                <button onclick="openEditModal('${id}')" class="text-blue-500 hover:text-blue-700 p-1 ${!canManage ? 'opacity-50 cursor-not-allowed' : ''}" ${!canManage ? 'disabled' : ''} title="แก้ไข"><i class="fas fa-pen-to-square"></i></button>
+                <button onclick="handleDelete('${id}')" class="text-red-500 hover:text-red-700 p-1 ${!canManage ? 'opacity-50 cursor-not-allowed' : ''}" ${!canManage ? 'disabled' : ''} title="ลบ"><i class="fas fa-trash-can"></i></button>
+            </td>
+        </tr>`;
+    }).join('');
 }
+// ==========================================================
+//  *** END: REVISED DATE LOGIC FOR FRONTEND ***
+// ==========================================================
 function updateCascadingFilters(currentFilters) {
     const selects = {
         employee: document.getElementById('filter-employee'), branch: document.getElementById('filter-branch'),
@@ -316,13 +322,8 @@ async function openEditModal(id){
         const response=await apiCall({action:'getScheduleById',payload:{id}});
         const data=response.data;
         Swal.close();
-        const workDate = new Date(data[3]);
-        const today=new Date(); today.setHours(0,0,0,0);
-        const sevenDaysAgo = new Date(today); sevenDaysAgo.setDate(today.getDate() - 7);
-        if(currentUser.role.toLowerCase()==='employee' && workDate < sevenDaysAgo){Swal.fire('ผิดพลาด', 'ไม่สามารถแก้ไขข้อมูลที่เก่ากว่า 7 วันได้', 'error');return;}
         const modal=document.getElementById('editModal');
         const form=document.getElementById('editScheduleForm');
-        // **FIX**: Build the form from scratch to avoid complexity
         form.innerHTML = `
             <input type="hidden" id="edit-id" value="${data[0]}">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -428,7 +429,6 @@ function initScheduleFormLogic(elements, mode = 'create') {
     populateHourDropdown(startH); populateMinuteDropdown(startM);
     populateHourDropdown(endH); populateMinuteDropdown(endM);
     
-    // **FIX**: Populate datalist specifically for edit mode right away
     if(mode === 'edit') {
         const datalist = branchContainer.querySelector('datalist');
         if (datalist) datalist.innerHTML = masterData.branches.map(b=>`<option value="${b[0]}"></option>`).join('');
@@ -513,4 +513,3 @@ async function loadActivityLogs(){const tableBody=document.getElementById('activ
 </script>
 </body>
 </html>
-
