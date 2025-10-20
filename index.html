@@ -43,7 +43,7 @@
             </form>
             <div id="loginError" class="mt-4 p-3 bg-red-100 text-red-700 rounded-xl hidden"></div>
         </div>
-        <p class="text-center text-xs text-gray-400 mt-4">Version 9.0 (Debug Mode)</p>
+        <p class="text-center text-xs text-gray-400 mt-4">Version 11.0 (Final Master)</p>
     </div>
     <div id="mainApp" class="hidden" x-data="{ navOpen: false }">
         <nav class="bg-white shadow-sm border-b sticky top-0 z-20">
@@ -170,13 +170,8 @@ async function apiCall(params) {
         throw new Error(error.message || 'Network or CORS error.');
     }
 }
-const hexToRgba = (hex, alpha) => {
-    const r = parseInt(hex.slice(1, 3), 16), g = parseInt(hex.slice(3, 5), 16), b = parseInt(hex.slice(5, 7), 16);
-    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
-};
-const stringToColor=(str)=>{if(!str)return'#808080';let hash=0;for(let i=0;i<str.length;i++){hash=str.charCodeAt(i)+((hash<<5)-hash)}
-let color='#';for(let i=0;i<3;i++){const value=(hash>>(i*8))&0xFF;color+=('00'+value.toString(16)).substr(-2)}
-return color};
+const hexToRgba = (hex, alpha) => { const r = parseInt(hex.slice(1, 3), 16), g = parseInt(hex.slice(3, 5), 16), b = parseInt(hex.slice(5, 7), 16); return `rgba(${r}, ${g}, ${b}, ${alpha})`; };
+const stringToColor=(str)=>{if(!str)return'#808080';let hash=0;for(let i=0;i<str.length;i++){hash=str.charCodeAt(i)+((hash<<5)-hash)} let color='#';for(let i=0;i<3;i++){const value=(hash>>(i*8))&0xFF;color+=('00'+value.toString(16)).substr(-2)} return color};
 const formatDateForDisplay=(isoDateString)=>{if(!isoDateString||typeof isoDateString!=='string'||!isoDateString.includes('-'))return"Invalid Date";try{const date=new Date(isoDateString);if(isNaN(date.getTime()))return"Invalid Date";return new Date(date.getTime()+date.getTimezoneOffset()*60*100).toLocaleDateString('th-TH',{day:'2-digit',month:'2-digit',year:'numeric'})}catch(e){return"Invalid Date"}};
 const populateHourDropdown=(selectElement)=>{selectElement.innerHTML='<option value="">ชม.</option>';for(let h=0;h<24;h++){const hour=h.toString().padStart(2,'0');selectElement.innerHTML+=`<option value="${hour}">${hour}</option>`}};
 const populateMinuteDropdown=(selectElement)=>{selectElement.innerHTML='<option value="">นาที</option>';for(let m=0;m<60;m+=10){const minute=m.toString().padStart(2,'0');selectElement.innerHTML+=`<option value="${minute}">${minute}</option>`}};
@@ -187,109 +182,10 @@ function togglePasswordVisibility(){const passwordInput=document.getElementById(
 function showPage(pageId,element){document.querySelectorAll('.nav-btn').forEach(btn=>btn.classList.remove('text-primary','bg-blue-100','dark:bg-blue-900/50'));if(element)element.classList.add('text-primary','bg-blue-100','dark:bg-blue-900/50');const pageContainer=document.getElementById(pageId+'Page');if(pageContainer){document.querySelectorAll('.page-content').forEach(p=>p.classList.add('hidden'));pageContainer.innerHTML=getPageHTML(pageId);pageContainer.classList.remove('hidden');switch(pageId){case'dashboard':initDashboardPage();break;case'calendar':initCalendarPage();break;case'scheduleForm':initScheduleFormPage();break;case'activity':loadActivityLogs();break}}}
 function getPageHTML(pageId){return{dashboard:`<div class="fade-in space-y-8"><div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4"><h1 class="text-3xl font-bold text-gray-800">Dashboard</h1></div><div id="stats-cards" class="grid grid-cols-1 md:grid-cols-3 gap-6"></div><div class="bg-white dark:bg-gray-800/50 rounded-xl shadow-md border dark:border-gray-700"><div class="p-4 border-b dark:border-gray-700 flex justify-between items-center"><h2 class="text-lg font-semibold">ตัวกรองข้อมูล</h2><button id="reset-filters-btn" class="text-sm text-gray-600 dark:text-gray-300 hover:text-primary dark:hover:text-blue-400 font-medium flex items-center gap-2"><i class="fas fa-undo"></i>รีเซ็ต</button></div><div id="dashboard-filters" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4 p-4"><div><label for="filter-month" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">เดือน</label><input type="month" id="filter-month" class="w-full p-2 border rounded-md text-sm"></div><div id="date-filter-container" style="display:none;"><label for="filter-date" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">วันที่</label><input type="date" id="filter-date" class="w-full p-2 border rounded-md text-sm"></div><div><label for="filter-employee" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">พนักงาน</label><select id="filter-employee" class="w-full p-2 border rounded-md text-sm"><option value="">ทั้งหมด</option></select></div><div><label for="filter-branch" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">สาขา</label><select id="filter-branch" class="w-full p-2 border rounded-md text-sm"><option value="">ทั้งหมด</option></select></div><div><label for="filter-area" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">เขต</label><select id="filter-area" class="w-full p-2 border rounded-md text-sm"><option value="">ทั้งหมด</option></select></div><div><label for="filter-region" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">ภาค</label><select id="filter-region" class="w-full p-2 border rounded-md text-sm"><option value="">ทั้งหมด</option></select></div></div></div><div class="bg-white dark:bg-gray-800/50 rounded-xl shadow-md border dark:border-gray-700 overflow-hidden"><div class="p-4 border-b dark:border-gray-700"><h2 class="text-lg font-semibold">ตารางงาน</h2></div><div class="overflow-x-auto"><table class="w-full dense-table"><thead class="table-header-custom"><tr id="header-row"></tr></thead><tbody id="dashboard-table-body"></tbody></table></div></div></div>`,calendar:`<div class="fade-in"><div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4"><h1 class="text-3xl font-bold text-gray-800">ปฏิทินทีม</h1><div class="flex items-center gap-2"><div id="calendar-filter-container" class="hidden"><select id="calendar-user-filter" class="p-2 border rounded-md text-sm"><option value="all">พนักงานทั้งหมด</option></select></div><button id="calendar-refresh-button" class="p-2 border rounded-md hover:bg-gray-100 dark:hover:bg-gray-700" title="รีเฟรชข้อมูล"><i class="fas fa-sync-alt"></i></button></div></div><div class="bg-white dark:bg-gray-800/50 p-4 sm:p-6 rounded-2xl shadow-md border dark:border-gray-700"><div id="calendar"></div></div></div>`,scheduleForm:`<div class="fade-in"><h1 class="text-3xl font-bold text-gray-800 mb-8">ลงเวลาปฏิบัติงาน</h1><div class="bg-white rounded-2xl shadow-sm border p-6 mb-8"><h2 class="text-xl font-bold text-gray-800 mb-6">สร้างตารางงานใหม่</h2><form id="scheduleForm" class="space-y-6"><div class="grid grid-cols-1 md:grid-cols-2 gap-6"><div><label for="scheduleDate" class="block text-sm font-medium">วันที่ปฏิบัติงาน</label><input type="date" id="scheduleDate" class="w-full mt-1 p-2 border rounded-md" required></div><div><label for="scheduleUsername" class="block text-sm font-medium">Username</label><input type="text" id="scheduleUsername" class="w-full mt-1 p-2 border bg-gray-100 rounded-md" readonly></div></div><div class="grid grid-cols-1 md:grid-cols-2 gap-6"><div><label for="schedulePeriod" class="block text-sm font-medium">ช่วงเวลา</label><select id="schedulePeriod" class="w-full mt-1 p-2 border rounded-md"><option value="">-- เลือกช่วงเวลา --</option><option value="morning">ครึ่งวันเช้า (08:30-12:00)</option><option value="afternoon">ครึ่งวันบ่าย (13:00-17:30)</option><option value="evening">ช่วงเย็น (16:30-18:30)</option><option value="full">ทั้งวัน (08:30-17:30)</option><option value="leave">วันลา</option></select></div></div><div class="grid grid-cols-1 md:grid-cols-2 gap-6"><div><label for="scheduleStartHour" class="block text-sm font-medium">เวลาเริ่มงาน</label><div class="flex items-center gap-2 mt-1"><select id="scheduleStartHour" class="w-full p-2 border rounded-md" required></select><span class="font-bold">:</span><select id="scheduleStartMinute" class="w-full p-2 border rounded-md" required></select></div></div><div><label for="scheduleEndHour" class="block text-sm font-medium">เวลาเลิกงาน</label><div class="flex items-center gap-2 mt-1"><select id="scheduleEndHour" class="w-full p-2 border rounded-md" required></select><span class="font-bold">:</span><select id="scheduleEndMinute" class="w-full p-2 border rounded-md" required></select></div></div></div><div id="branch-container-wrapper"><div><label for="scheduleBranch" class="block text-sm font-medium">สาขา</label><input list="branch-list" id="scheduleBranch" class="w-full mt-1 p-2 border rounded-md" placeholder="พิมพ์เพื่อค้นหา..." required><datalist id="branch-list"></datalist></div></div><div class="grid grid-cols-1 md:grid-cols-2 gap-6"><div><label class="block text-sm font-medium">เขต</label><input type="text" id="scheduleArea" class="w-full mt-1 p-2 border bg-gray-100 rounded-md" readonly></div><div><label for="scheduleRegion" class="block text-sm font-medium">ภาค</label><input type="text" id="scheduleRegion" class="w-full mt-1 p-2 border bg-gray-100 rounded-md" readonly></div></div><div><label for="scheduleDetails" class="block text-sm font-medium">รายละเอียดงาน</label><textarea id="scheduleDetails" rows="3" class="w-full mt-1 p-2 border rounded-md"></textarea></div><div class="flex justify-end"><button type="submit" id="saveScheduleBtn" class="px-6 py-3 bg-primary text-white rounded-xl">บันทึก</button></div></form></div></div>`,activity:`<div class="fade-in"><h1 class="text-3xl font-bold text-gray-800 mb-8">Activity Log</h1><div class="bg-white rounded-2xl shadow-sm border overflow-hidden"><div class="overflow-x-auto"><table class="w-full"><thead class="bg-gray-50"><tr><th class="px-6 py-4 text-left text-xs font-medium uppercase">วัน-เวลา</th><th class="px-6 py-4 text-left text-xs font-medium uppercase">Username</th><th class="px-6 py-4 text-left text-xs font-medium uppercase">กิจกรรม</th></tr></thead><tbody id="activityTableBody" class="bg-white divide-y divide-gray-200"></tbody></table></div></div></div>`}[pageId]||''}
 // --- DASHBOARD PAGE ---
-function initDashboardPage(){
-    const headerRow=document.getElementById('header-row');
-    headerRow.innerHTML=['วันที่','พนักงาน','สาขา','เขต','ภาค','จัดการ'].map(c=>`<th class="p-3 text-left text-xs font-medium uppercase tracking-wider">${c}</th>`).join('');
-    setupDashboardFilters();
-}
-function setupDashboardFilters() {
-    const filters = {
-        month: document.getElementById('filter-month'), date: document.getElementById('filter-date'),
-        employee: document.getElementById('filter-employee'), branch: document.getElementById('filter-branch'),
-        area: document.getElementById('filter-area'), region: document.getElementById('filter-region')
-    };
-    filters.month.value = new Date().toISOString().slice(0, 7);
-    const userRole = currentUser.role.toLowerCase();
-    if (userRole === 'admin' || userRole === 'manager') {
-        document.getElementById('date-filter-container').style.display = 'block';
-    }
-    Object.values(filters).forEach(filter => { filter.addEventListener('change', renderDashboardTable); });
-    document.getElementById('reset-filters-btn').addEventListener('click', () => {
-        filters.month.value = new Date().toISOString().slice(0, 7);
-        filters.date.value = '';
-        filters.employee.value = '';
-        filters.branch.value = '';
-        filters.area.value = '';
-        filters.region.value = '';
-        renderDashboardTable();
-    });
-    renderDashboardTable();
-}
-function renderDashboardTable(){
-    const filters = {
-        month: document.getElementById('filter-month').value, date: document.getElementById('filter-date').value,
-        employee: document.getElementById('filter-employee').value, branch: document.getElementById('filter-branch').value,
-        area: document.getElementById('filter-area').value, region: document.getElementById('filter-region').value
-    };
-    updateCascadingFilters(filters);
-    let filteredData = masterData.schedules;
-    if (filters.month) { filteredData = filteredData.filter(row => row[3] && row[3].startsWith(filters.month)); }
-    if (filters.date) { filteredData = filteredData.filter(row => row[3] === filters.date); }
-    if (filters.region) { filteredData = filteredData.filter(row => row[10] === filters.region); }
-    if (filters.area) { filteredData = filteredData.filter(row => row[9] === filters.area); }
-    if (filters.branch) { filteredData = filteredData.filter(row => row[6] === filters.branch); }
-    if (filters.employee) { filteredData = filteredData.filter(row => row[11] === filters.employee); }
-    updateStatsCards(filteredData);
-    
-    const tableBody = document.getElementById('dashboard-table-body');
-    if(filteredData.length === 0){ tableBody.innerHTML=`<tr><td colspan="6" class="p-8 text-center text-gray-500">ไม่พบข้อมูลตามเงื่อนไขที่เลือก</td></tr>`; return; }
-
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const cutoffDate = new Date(today);
-    cutoffDate.setDate(cutoffDate.getDate() - EDIT_DELETE_WINDOW_DAYS);
-    const cutoffDateTime = cutoffDate.getTime();
-    
-    tableBody.innerHTML = filteredData.sort((a, b) => new Date(b[3]) - new Date(a[3])).map(row => {
-        const [id, ts, user, date, st, et, branch, details, status, area, region, nickname] = row;
-        
-        let canManage = true;
-        if (currentUser.role.toLowerCase() === 'employee') {
-            if (!date) {
-                canManage = false;
-            } else {
-                const parts = date.split('-').map(Number);
-                const workDate = new Date(parts[0], parts[1] - 1, parts[2]);
-                const workDateTime = workDate.getTime();
-                canManage = workDateTime >= cutoffDateTime;
-            }
-        }
-
-        return `<tr>
-            <td class="p-3 text-sm">${formatDateForDisplay(date)}</td>
-            <td class="p-3 text-sm">${nickname}</td>
-            <td class="p-3 text-sm">${branch}</td>
-            <td class="p-3 text-sm">${area}</td>
-            <td class="p-3 text-sm">${region}</td>
-            <td class="p-3 text-sm text-center whitespace-nowrap space-x-2">
-                <button onclick="openViewModal('${id}')" class="text-gray-500 hover:text-primary p-1" title="ดู"><i class="fas fa-eye"></i></button>
-                <button onclick="openEditModal('${id}')" class="text-blue-500 hover:text-blue-700 p-1 ${!canManage ? 'opacity-50 cursor-not-allowed' : ''}" ${!canManage ? 'disabled' : ''} title="แก้ไข"><i class="fas fa-pen-to-square"></i></button>
-                <button onclick="handleDelete('${id}')" class="text-red-500 hover:text-red-700 p-1 ${!canManage ? 'opacity-50 cursor-not-allowed' : ''}" ${!canManage ? 'disabled' : ''} title="ลบ"><i class="fas fa-trash-can"></i></button>
-            </td>
-        </tr>`;
-    }).join('');
-}
-function updateCascadingFilters(currentFilters) {
-    const selects = { employee: document.getElementById('filter-employee'), branch: document.getElementById('filter-branch'), area: document.getElementById('filter-area'), region: document.getElementById('filter-region') };
-    let baseData = masterData.schedules;
-    if (currentFilters.month) baseData = baseData.filter(s => s[3] && s[3].startsWith(currentFilters.month));
-    if (currentFilters.date) baseData = baseData.filter(s => s[3] === currentFilters.date);
-    const updateOptionsFor = (key, dataIndex, selectElement) => {
-        let tempFiltered = baseData;
-        for (const filterKey in currentFilters) {
-            if (filterKey !== key && currentFilters[filterKey] && ['region', 'area', 'branch', 'employee'].includes(filterKey)) {
-                const idx = { region: 10, area: 9, branch: 6, employee: 11 }[filterKey];
-                tempFiltered = tempFiltered.filter(s => s[idx] === currentFilters[filterKey]);
-            }
-        }
-        const options = [...new Set(tempFiltered.map(s => s[dataIndex]).filter(Boolean))].sort((a,b) => (a+'').localeCompare(b+'', 'th'));
-        populateSelect(selectElement, options, currentFilters[key]);
-    };
-    updateOptionsFor('region', 10, selects.region);
-    updateOptionsFor('area', 9, selects.area);
-    updateOptionsFor('branch', 6, selects.branch);
-    updateOptionsFor('employee', 11, selects.employee);
-}
+function initDashboardPage(){ const headerRow=document.getElementById('header-row'); headerRow.innerHTML=['วันที่','พนักงาน','สาขา','เขต','ภาค','จัดการ'].map(c=>`<th class="p-3 text-left text-xs font-medium uppercase tracking-wider">${c}</th>`).join(''); setupDashboardFilters(); }
+function setupDashboardFilters() { const filters = { month: document.getElementById('filter-month'), date: document.getElementById('filter-date'), employee: document.getElementById('filter-employee'), branch: document.getElementById('filter-branch'), area: document.getElementById('filter-area'), region: document.getElementById('filter-region') }; filters.month.value = new Date().toISOString().slice(0, 7); const userRole = currentUser.role.toLowerCase(); if (userRole === 'admin' || userRole === 'manager') { document.getElementById('date-filter-container').style.display = 'block'; } Object.values(filters).forEach(filter => { filter.addEventListener('change', renderDashboardTable); }); document.getElementById('reset-filters-btn').addEventListener('click', () => { filters.month.value = new Date().toISOString().slice(0, 7); filters.date.value = ''; filters.employee.value = ''; filters.branch.value = ''; filters.area.value = ''; filters.region.value = ''; renderDashboardTable(); }); renderDashboardTable(); }
+function renderDashboardTable(){ const filters = { month: document.getElementById('filter-month').value, date: document.getElementById('filter-date').value, employee: document.getElementById('filter-employee').value, branch: document.getElementById('filter-branch').value, area: document.getElementById('filter-area').value, region: document.getElementById('filter-region').value }; updateCascadingFilters(filters); let filteredData = masterData.schedules; if (filters.month) { filteredData = filteredData.filter(row => row[3] && row[3].startsWith(filters.month)); } if (filters.date) { filteredData = filteredData.filter(row => row[3] === filters.date); } if (filters.region) { filteredData = filteredData.filter(row => row[10] === filters.region); } if (filters.area) { filteredData = filteredData.filter(row => row[9] === filters.area); } if (filters.branch) { filteredData = filteredData.filter(row => row[6] === filters.branch); } if (filters.employee) { filteredData = filteredData.filter(row => row[11] === filters.employee); } updateStatsCards(filteredData); const tableBody = document.getElementById('dashboard-table-body'); if(filteredData.length === 0){ tableBody.innerHTML=`<tr><td colspan="6" class="p-8 text-center text-gray-500">ไม่พบข้อมูลตามเงื่อนไขที่เลือก</td></tr>`; return; } const today = new Date(); today.setHours(0, 0, 0, 0); const cutoffDate = new Date(today); cutoffDate.setDate(cutoffDate.getDate() - EDIT_DELETE_WINDOW_DAYS); const cutoffDateTime = cutoffDate.getTime(); tableBody.innerHTML = filteredData.sort((a, b) => new Date(b[3]) - new Date(a[3])).map(row => { const [id, ts, user, date, st, et, branch, details, status, area, region, nickname] = row; let canManage = true; if (currentUser.role.toLowerCase() === 'employee') { if (!date) { canManage = false; } else { const parts = date.split('-').map(Number); const workDate = new Date(parts[0], parts[1] - 1, parts[2]); const workDateTime = workDate.getTime(); canManage = workDateTime >= cutoffDateTime; } } return `<tr><td class="p-3 text-sm">${formatDateForDisplay(date)}</td><td class="p-3 text-sm">${nickname}</td><td class="p-3 text-sm">${branch}</td><td class="p-3 text-sm">${area}</td><td class="p-3 text-sm">${region}</td><td class="p-3 text-sm text-center whitespace-nowrap space-x-2"><button onclick="openViewModal('${id}')" class="text-gray-500 hover:text-primary p-1" title="ดู"><i class="fas fa-eye"></i></button><button onclick="openEditModal('${id}')" class="text-blue-500 hover:text-blue-700 p-1 ${!canManage ? 'opacity-50 cursor-not-allowed' : ''}" ${!canManage ? 'disabled' : ''} title="แก้ไข"><i class="fas fa-pen-to-square"></i></button><button onclick="handleDelete('${id}')" class="text-red-500 hover:text-red-700 p-1 ${!canManage ? 'opacity-50 cursor-not-allowed' : ''}" ${!canManage ? 'disabled' : ''} title="ลบ"><i class="fas fa-trash-can"></i></button></td></tr>`; }).join(''); }
+function updateCascadingFilters(currentFilters) { const selects = { employee: document.getElementById('filter-employee'), branch: document.getElementById('filter-branch'), area: document.getElementById('filter-area'), region: document.getElementById('filter-region') }; let baseData = masterData.schedules; if (currentFilters.month) baseData = baseData.filter(s => s[3] && s[3].startsWith(currentFilters.month)); if (currentFilters.date) baseData = baseData.filter(s => s[3] === currentFilters.date); const updateOptionsFor = (key, dataIndex, selectElement) => { let tempFiltered = baseData; for (const filterKey in currentFilters) { if (filterKey !== key && currentFilters[filterKey] && ['region', 'area', 'branch', 'employee'].includes(filterKey)) { const idx = { region: 10, area: 9, branch: 6, employee: 11 }[filterKey]; tempFiltered = tempFiltered.filter(s => s[idx] === currentFilters[filterKey]); } } const options = [...new Set(tempFiltered.map(s => s[dataIndex]).filter(Boolean))].sort((a,b) => (a+'').localeCompare(b+'', 'th')); populateSelect(selectElement, options, currentFilters[key]); }; updateOptionsFor('region', 10, selects.region); updateOptionsFor('area', 9, selects.area); updateOptionsFor('branch', 6, selects.branch); updateOptionsFor('employee', 11, selects.employee); }
 function populateSelect(selectElement, options, selectedValue) { const currentValue = selectElement.value; selectElement.innerHTML = '<option value="">ทั้งหมด</option>'; options.forEach(option => { selectElement.innerHTML += `<option value="${option}" ${option == currentValue && options.includes(currentValue) ? 'selected' : ''}>${option}</option>`; }); }
 function updateStatsCards(data){ const container=document.getElementById('stats-cards'); container.innerHTML = `<div class="stats-card rounded-xl shadow-md p-5 flex items-center space-x-4 bg-gradient-to-br from-blue-400 to-blue-600 text-white"><div class="bg-white/30 p-3 rounded-full"><i class="fas fa-calendar-check fa-lg"></i></div><div><p class="text-sm opacity-90">แผนงาน (ที่แสดง)</p><p class="text-2xl font-bold">${data.length}</p></div></div><div class="stats-card rounded-xl shadow-md p-5 flex items-center space-x-4 bg-gradient-to-br from-green-400 to-green-600 text-white"><div class="bg-white/30 p-3 rounded-full"><i class="fas fa-store fa-lg"></i></div><div><p class="text-sm opacity-90">จำนวนสาขา (ที่แสดง)</p><p class="text-2xl font-bold">${new Set(data.map(r=>r[6])).size}</p></div></div><div class="stats-card rounded-xl shadow-md p-5 flex items-center space-x-4 bg-gradient-to-br from-purple-400 to-purple-600 text-white"><div class="bg-white/30 p-3 rounded-full"><i class="fas fa-users fa-lg"></i></div><div><p class="text-sm opacity-90">จำนวนพนักงาน (ที่แสดง)</p><p class="text-2xl font-bold">${new Set(data.map(r=>r[11])).size}</p></div></div>`; }
 function openViewModal(id){const eventData=masterData.schedules.find(row=>row[0]===id);if(!eventData)return;const[schId,ts,user,date,st,et,branch,details,status,area,region,nickname]=eventData;showCalendarEventModal({nickname,workDate:date,startTime:st,endTime:et,branch,area,region,details})}
