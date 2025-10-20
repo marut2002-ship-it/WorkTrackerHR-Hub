@@ -254,12 +254,27 @@ function renderDashboardTable(){
     const today=new Date(); today.setHours(0,0,0,0);
     const sevenDaysAgo = new Date(today); sevenDaysAgo.setDate(today.getDate() - 7);
     tableBody.innerHTML=filteredData.sort((a, b) => new Date(b[3]) - new Date(a[3])).map(row=>{
-        const[id,ts,user,date,st,et,branch,details,status,area,region,nickname]=row;
-        const workDate = new Date(date);
-        const cannotEdit = workDate < sevenDaysAgo;
-        const canManage = currentUser.role.toLowerCase()!=='employee' || !cannotEdit;
-        return`<tr><td class="p-3 text-sm">${formatDateForDisplay(date)}</td><td class="p-3 text-sm">${nickname}</td><td class="p-3 text-sm">${branch}</td><td class="p-3 text-sm">${area}</td><td class="p-3 text-sm">${region}</td><td class="p-3 text-sm text-center whitespace-nowrap space-x-2"><button onclick="openViewModal('${id}')" class="text-gray-500 hover:text-primary p-1" title="ดู"><i class="fas fa-eye"></i></button><button onclick="openEditModal('${id}')" class="text-blue-500 hover:text-blue-700 p-1 ${!canManage?'opacity-50 cursor-not-allowed':''}" ${!canManage?'disabled':''} title="แก้ไข"><i class="fas fa-pen-to-square"></i></button><button onclick="handleDelete('${id}')" class="text-red-500 hover:text-red-700 p-1 ${!canManage?'opacity-50 cursor-not-allowed':''}" ${!canManage?'disabled':''} title="ลบ"><i class="fas fa-trash-can"></i></button></td></tr>`
-    }).join('');
+    const[id,ts,user,date,st,et,branch,details,status,area,region,nickname]=row;
+
+    // ----- START: EDIT THIS PART -----
+    // Normalize today's date to midnight
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const sevenDaysAgo = new Date(today);
+    sevenDaysAgo.setDate(today.getDate() - 7);
+
+    // Normalize workDate from string "yyyy-mm-dd" to a proper Date object at midnight
+    // This avoids timezone issues where '2025-10-17' becomes '2025-10-16T17:00:00.000Z'
+    const parts = date.split('-').map(Number); // [2025, 10, 17]
+    const workDate = new Date(parts[0], parts[1] - 1, parts[2]); // Month is 0-indexed
+
+    const cannotEdit = workDate < sevenDaysAgo;
+    const canManage = currentUser.role.toLowerCase() !== 'employee' || !cannotEdit;
+    // ----- END: EDIT THIS PART -----
+
+    return`<tr><td class="p-3 text-sm">${formatDateForDisplay(date)}</td><td class="p-3 text-sm">${nickname}</td><td class="p-3 text-sm">${branch}</td><td class="p-3 text-sm">${area}</td><td class="p-3 text-sm">${region}</td><td class="p-3 text-sm text-center whitespace-nowrap space-x-2"><button onclick="openViewModal('${id}')" class="text-gray-500 hover:text-primary p-1" title="ดู"><i class="fas fa-eye"></i></button><button onclick="openEditModal('${id}')" class="text-blue-500 hover:text-blue-700 p-1 ${!canManage?'opacity-50 cursor-not-allowed':''}" ${!canManage?'disabled':''} title="แก้ไข"><i class="fas fa-pen-to-square"></i></button><button onclick="handleDelete('${id}')" class="text-red-500 hover:text-red-700 p-1 ${!canManage?'opacity-50 cursor-not-allowed':''}" ${!canManage?'disabled':''} title="ลบ"><i class="fas fa-trash-can"></i></button></td></tr>`
+}).join('');
 }
 function updateCascadingFilters(currentFilters) {
     const selects = {
@@ -498,3 +513,4 @@ async function loadActivityLogs(){const tableBody=document.getElementById('activ
 </script>
 </body>
 </html>
+
