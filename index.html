@@ -72,6 +72,11 @@
         .dark .fc-list-event:hover td { background-color: #1f2937; }
         /* Remove underline from links in list view */
         .fc-list-day-text, .fc-list-day-side-text { text-decoration: none !important; }
+
+        /* Pagination Buttons */
+        .pagination-btn { @apply px-3 py-1 border rounded text-sm hover:bg-gray-100 dark:border-gray-600 dark:hover:bg-gray-700 dark:text-gray-300; }
+        .pagination-btn.active { @apply bg-primary text-white border-primary dark:bg-primary dark:border-primary; }
+        .pagination-btn:disabled { @apply opacity-50 cursor-not-allowed; }
     </style>
 </head>
 <body class="bg-gray-50 font-sans">
@@ -85,7 +90,7 @@
             </form>
             <div id="loginError" class="mt-4 p-3 bg-red-100 text-red-700 rounded-xl hidden"></div>
         </div>
-        <p class="text-center text-xs text-gray-400 mt-4">Version 17.3 (List Dark Mode & Week View Fix)</p>
+        <p class="text-center text-xs text-gray-400 mt-4">Version 17.5 (Full Week View)</p>
     </div>
 
     <div id="mainApp" class="hidden" x-data="{ navOpen: false }">
@@ -217,6 +222,9 @@ const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbywI21UxD-mVY9Gx743y
 const EDIT_DELETE_WINDOW_DAYS = 30; 
 let currentUser = null,fullCalendarInstance = null,masterData = { schedules: [], branches: [], users: [] };
 let latestDashboardData = []; // Store current filtered data for Export
+// Pagination Global Variables
+let currentDashboardPage = 1;
+const ITEMS_PER_PAGE = 20;
 
 // Modern Pastel Palette
 const COLOR_PALETTE = [
@@ -350,14 +358,76 @@ async function handleLogin(e){e.preventDefault();const loginBtn=document.getElem
 function logout(){sessionStorage.removeItem('currentUser');location.reload()}
 function togglePasswordVisibility(){const passwordInput=document.getElementById('password');const icon=this.querySelector('i');const type=passwordInput.getAttribute('type')==='password'?'text':'password';passwordInput.setAttribute('type',type);icon.classList.toggle('fa-eye');icon.classList.toggle('fa-eye-slash')}
 function showPage(pageId,element){document.querySelectorAll('.nav-btn').forEach(btn=>btn.classList.remove('text-primary','bg-blue-100','dark:bg-blue-900/50'));if(element)element.classList.add('text-primary','bg-blue-100','dark:bg-blue-900/50');const pageContainer=document.getElementById(pageId+'Page');if(pageContainer){document.querySelectorAll('.page-content').forEach(p=>p.classList.add('hidden'));pageContainer.innerHTML=getPageHTML(pageId);pageContainer.classList.remove('hidden');switch(pageId){case'dashboard':initDashboardPage();break;case'calendar':initCalendarPage();break;case'scheduleForm':initScheduleFormPage();break;case'activity':loadActivityLogs();break;}}}
-function getPageHTML(pageId){return{dashboard:`<div class="fade-in space-y-8"><div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4"><h1 class="text-3xl font-bold text-gray-800">Dashboard</h1></div><div id="stats-cards" class="grid grid-cols-1 md:grid-cols-3 gap-6"></div>
-<div class="bg-white dark:bg-gray-800/50 rounded-xl shadow-md border dark:border-gray-700"><div class="p-4 border-b dark:border-gray-700 flex justify-between items-center"><h2 class="text-lg font-semibold">ตัวกรองข้อมูล</h2><div class="flex gap-2"><button id="reset-filters-btn" class="text-sm text-gray-600 dark:text-gray-300 hover:text-primary font-medium flex items-center gap-2"><i class="fas fa-undo"></i>รีเซ็ต</button><button onclick="openExportPreview()" class="text-sm bg-green-500 text-white px-3 py-1 rounded hover:bg-green-600 flex items-center gap-2"><i class="fas fa-file-csv"></i>Export CSV</button></div></div><div id="dashboard-filters" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4 p-4"><div><label for="filter-month" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">เดือน</label><input type="month" id="filter-month" class="w-full p-2 border rounded-md text-sm"></div><div id="date-filter-container" style="display:none;"><label for="filter-date" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">วันที่</label><input type="date" id="filter-date" class="w-full p-2 border rounded-md text-sm"></div><div><label for="filter-employee" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">พนักงาน</label><select id="filter-employee" class="w-full p-2 border rounded-md text-sm"><option value="">ทั้งหมด</option></select></div><div><label for="filter-branch" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">สาขา</label><select id="filter-branch" class="w-full p-2 border rounded-md text-sm"><option value="">ทั้งหมด</option></select></div><div><label for="filter-area" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">เขต</label><select id="filter-area" class="w-full p-2 border rounded-md text-sm"><option value="">ทั้งหมด</option></select></div><div><label for="filter-region" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">ภาค</label><select id="filter-region" class="w-full p-2 border rounded-md text-sm"><option value="">ทั้งหมด</option></select></div></div></div><div class="bg-white dark:bg-gray-800/50 rounded-xl shadow-md border dark:border-gray-700 overflow-hidden"><div class="p-4 border-b dark:border-gray-700"><h2 class="text-lg font-semibold">ตารางงาน</h2></div><div class="overflow-x-auto"><table class="w-full dense-table"><thead class="table-header-custom"><tr id="header-row"></tr></thead><tbody id="dashboard-table-body"></tbody></table></div></div></div>`,calendar:`<div class="fade-in"><div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4"><h1 class="text-3xl font-bold text-gray-800">ปฏิทินทีม</h1><div class="flex items-center gap-2"><div id="calendar-filter-container" class="hidden"><div class="relative"><i class="fas fa-filter absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i><select id="calendar-user-filter" class="pl-9 pr-4 py-2 border rounded-lg text-sm bg-white dark:bg-gray-700 shadow-sm focus:ring-2 focus:ring-primary focus:outline-none"><option value="all">พนักงานทั้งหมด</option></select></div></div><button id="calendar-refresh-button" class="p-2 px-3 border rounded-lg bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 shadow-sm transition text-gray-600 dark:text-gray-300" title="รีเฟรชข้อมูล"><i class="fas fa-sync-alt mr-1"></i> รีโหลด</button></div></div><div class="bg-white dark:bg-gray-800/50 p-4 sm:p-6 rounded-2xl shadow-lg border dark:border-gray-700"><div id="calendar" class="calendar-custom-theme"></div></div></div>`,scheduleForm:`<div class="fade-in"><h1 class="text-3xl font-bold text-gray-800 mb-8">ลงเวลาปฏิบัติงาน</h1><div class="bg-white rounded-2xl shadow-sm border p-6 mb-8"><h2 class="text-xl font-bold text-gray-800 mb-6">สร้างตารางงานใหม่</h2><form id="scheduleForm" class="space-y-6"><div class="grid grid-cols-1 md:grid-cols-2 gap-6"><div class="grid grid-cols-2 gap-2"><div><label for="scheduleDate" class="block text-sm font-medium">ตั้งแต่วันที่</label><input type="date" id="scheduleDate" class="w-full mt-1 p-2 border rounded-md" required></div><div><label for="scheduleEndDate" class="block text-sm font-medium">ถึงวันที่ <span class="text-xs text-gray-400">(เลือกวันเดียวไม่ต้องใส่)</span></label><input type="date" id="scheduleEndDate" class="w-full mt-1 p-2 border rounded-md"></div></div><div><label for="scheduleUsername" class="block text-sm font-medium">Username</label><input type="text" id="scheduleUsername" class="w-full mt-1 p-2 border bg-gray-100 rounded-md" readonly></div></div><div class="grid grid-cols-1 md:grid-cols-2 gap-6"><div><label for="schedulePeriod" class="block text-sm font-medium">ช่วงเวลา</label><select id="schedulePeriod" class="w-full mt-1 p-2 border rounded-md"><option value="">-- เลือกช่วงเวลา --</option><option value="morning">ครึ่งวันเช้า (08:30-12:00)</option><option value="afternoon">ครึ่งวันบ่าย (13:00-17:30)</option><option value="evening">ช่วงเย็น (16:30-18:30)</option><option value="full">ทั้งวัน (08:30-17:30)</option><option value="leave">วันลา</option></select></div></div><div class="grid grid-cols-1 md:grid-cols-2 gap-6"><div><label for="scheduleStartHour" class="block text-sm font-medium">เวลาเริ่มงาน</label><div class="flex items-center gap-2 mt-1"><select id="scheduleStartHour" class="w-full p-2 border rounded-md" required></select><span class="font-bold">:</span><select id="scheduleStartMinute" class="w-full p-2 border rounded-md" required></select></div></div><div><label for="scheduleEndHour" class="block text-sm font-medium">เวลาเลิกงาน</label><div class="flex items-center gap-2 mt-1"><select id="scheduleEndHour" class="w-full p-2 border rounded-md" required></select><span class="font-bold">:</span><select id="scheduleEndMinute" class="w-full p-2 border rounded-md" required></select></div></div></div><div id="branch-container-wrapper"><div><label for="scheduleBranch" class="block text-sm font-medium">สาขา</label><input list="branch-list" id="scheduleBranch" class="w-full mt-1 p-2 border rounded-md" placeholder="พิมพ์เพื่อค้นหา..." required><datalist id="branch-list"></datalist></div></div><div class="grid grid-cols-1 md:grid-cols-2 gap-6"><div><label class="block text-sm font-medium">เขต</label><input type="text" id="scheduleArea" class="w-full mt-1 p-2 border bg-gray-100 rounded-md" readonly></div><div><label for="scheduleRegion" class="block text-sm font-medium">ภาค</label><input type="text" id="scheduleRegion" class="w-full mt-1 p-2 border bg-gray-100 rounded-md" readonly></div></div><div><label for="scheduleDetails" class="block text-sm font-medium">รายละเอียดงาน</label><textarea id="scheduleDetails" rows="3" class="w-full mt-1 p-2 border rounded-md"></textarea></div><div class="flex justify-end"><button type="submit" id="saveScheduleBtn" class="px-6 py-3 bg-primary text-white rounded-xl">บันทึก</button></div></form></div></div>`,activity:`<div class="fade-in"><h1 class="text-3xl font-bold text-gray-800 mb-8">Activity Log</h1><div class="bg-white rounded-2xl shadow-sm border overflow-hidden"><div class="overflow-x-auto"><table class="w-full"><thead class="bg-gray-50"><tr><th class="px-6 py-4 text-left text-xs font-medium uppercase">วัน-เวลา</th><th class="px-6 py-4 text-left text-xs font-medium uppercase">Username</th><th class="px-6 py-4 text-left text-xs font-medium uppercase">กิจกรรม</th></tr></thead><tbody id="activityTableBody" class="bg-white divide-y divide-gray-200"></tbody></table></div></div></div>`}[pageId]||''}
+function getPageHTML(pageId){return{dashboard:`<div class="fade-in space-y-8"><div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4"><h1 class="text-3xl font-bold text-gray-800">Dashboard</h1></div><div id="stats-cards" class="grid grid-cols-1 md:grid-cols-3 gap-6"></div><div id="leave-summary-card"></div>
+<div class="bg-white dark:bg-gray-800/50 rounded-xl shadow-md border dark:border-gray-700"><div class="p-4 border-b dark:border-gray-700 flex justify-between items-center"><h2 class="text-lg font-semibold">ตัวกรองข้อมูล</h2><div class="flex gap-2"><button id="reset-filters-btn" class="text-sm text-gray-600 dark:text-gray-300 hover:text-primary font-medium flex items-center gap-2"><i class="fas fa-undo"></i>รีเซ็ต</button><button onclick="openExportPreview()" class="text-sm bg-green-500 text-white px-3 py-1 rounded hover:bg-green-600 flex items-center gap-2"><i class="fas fa-file-csv"></i>Export CSV</button></div></div><div id="dashboard-filters" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4 p-4"><div><label for="filter-month" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">เดือน</label><input type="month" id="filter-month" class="w-full p-2 border rounded-md text-sm"></div><div id="date-filter-container" style="display:none;"><label for="filter-date" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">วันที่</label><input type="date" id="filter-date" class="w-full p-2 border rounded-md text-sm"></div><div><label for="filter-employee" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">พนักงาน</label><select id="filter-employee" class="w-full p-2 border rounded-md text-sm"><option value="">ทั้งหมด</option></select></div><div><label for="filter-branch" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">สาขา</label><select id="filter-branch" class="w-full p-2 border rounded-md text-sm"><option value="">ทั้งหมด</option></select></div><div><label for="filter-area" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">เขต</label><select id="filter-area" class="w-full p-2 border rounded-md text-sm"><option value="">ทั้งหมด</option></select></div><div><label for="filter-region" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">ภาค</label><select id="filter-region" class="w-full p-2 border rounded-md text-sm"><option value="">ทั้งหมด</option></select></div></div></div><div class="bg-white dark:bg-gray-800/50 rounded-xl shadow-md border dark:border-gray-700 overflow-hidden"><div class="p-4 border-b dark:border-gray-700"><h2 class="text-lg font-semibold">ตารางงาน</h2></div><div class="overflow-x-auto"><table class="w-full dense-table"><thead class="table-header-custom"><tr id="header-row"></tr></thead><tbody id="dashboard-table-body"></tbody></table></div><div id="pagination-controls" class="p-4 flex items-center justify-between border-t dark:border-gray-700"></div></div></div>`,calendar:`<div class="fade-in"><div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4"><h1 class="text-3xl font-bold text-gray-800">ปฏิทินทีม</h1><div class="flex items-center gap-2"><div id="calendar-filter-container" class="hidden"><div class="relative"><i class="fas fa-filter absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i><select id="calendar-user-filter" class="pl-9 pr-4 py-2 border rounded-lg text-sm bg-white dark:bg-gray-700 shadow-sm focus:ring-2 focus:ring-primary focus:outline-none"><option value="all">พนักงานทั้งหมด</option></select></div></div><button id="calendar-refresh-button" class="p-2 px-3 border rounded-lg bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 shadow-sm transition text-gray-600 dark:text-gray-300" title="รีเฟรชข้อมูล"><i class="fas fa-sync-alt mr-1"></i> รีโหลด</button></div></div><div class="bg-white dark:bg-gray-800/50 p-4 sm:p-6 rounded-2xl shadow-lg border dark:border-gray-700"><div id="calendar" class="calendar-custom-theme"></div></div></div>`,scheduleForm:`<div class="fade-in"><h1 class="text-3xl font-bold text-gray-800 mb-8">ลงเวลาปฏิบัติงาน</h1><div class="bg-white rounded-2xl shadow-sm border p-6 mb-8"><h2 class="text-xl font-bold text-gray-800 mb-6">สร้างตารางงานใหม่</h2><form id="scheduleForm" class="space-y-6"><div class="grid grid-cols-1 md:grid-cols-2 gap-6"><div class="grid grid-cols-2 gap-2"><div><label for="scheduleDate" class="block text-sm font-medium">ตั้งแต่วันที่</label><input type="date" id="scheduleDate" class="w-full mt-1 p-2 border rounded-md" required></div><div><label for="scheduleEndDate" class="block text-sm font-medium">ถึงวันที่ <span class="text-xs text-gray-400">(เลือกวันเดียวไม่ต้องใส่)</span></label><input type="date" id="scheduleEndDate" class="w-full mt-1 p-2 border rounded-md"></div></div><div><label for="scheduleUsername" class="block text-sm font-medium">Username</label><input type="text" id="scheduleUsername" class="w-full mt-1 p-2 border bg-gray-100 rounded-md" readonly></div></div><div class="grid grid-cols-1 md:grid-cols-2 gap-6"><div><label for="schedulePeriod" class="block text-sm font-medium">ช่วงเวลา</label><select id="schedulePeriod" class="w-full mt-1 p-2 border rounded-md"><option value="">-- เลือกช่วงเวลา --</option><option value="morning">ครึ่งวันเช้า (08:30-12:00)</option><option value="afternoon">ครึ่งวันบ่าย (13:00-17:30)</option><option value="evening">ช่วงเย็น (16:30-18:30)</option><option value="full">ทั้งวัน (08:30-17:30)</option><option value="leave">วันลา</option></select></div></div><div class="grid grid-cols-1 md:grid-cols-2 gap-6"><div><label for="scheduleStartHour" class="block text-sm font-medium">เวลาเริ่มงาน</label><div class="flex items-center gap-2 mt-1"><select id="scheduleStartHour" class="w-full p-2 border rounded-md" required></select><span class="font-bold">:</span><select id="scheduleStartMinute" class="w-full p-2 border rounded-md" required></select></div></div><div><label for="scheduleEndHour" class="block text-sm font-medium">เวลาเลิกงาน</label><div class="flex items-center gap-2 mt-1"><select id="scheduleEndHour" class="w-full p-2 border rounded-md" required></select><span class="font-bold">:</span><select id="scheduleEndMinute" class="w-full p-2 border rounded-md" required></select></div></div></div><div id="branch-container-wrapper"><div><label for="scheduleBranch" class="block text-sm font-medium">สาขา</label><input list="branch-list" id="scheduleBranch" class="w-full mt-1 p-2 border rounded-md" placeholder="พิมพ์เพื่อค้นหา..." required><datalist id="branch-list"></datalist></div></div><div class="grid grid-cols-1 md:grid-cols-2 gap-6"><div><label class="block text-sm font-medium">เขต</label><input type="text" id="scheduleArea" class="w-full mt-1 p-2 border bg-gray-100 rounded-md" readonly></div><div><label for="scheduleRegion" class="block text-sm font-medium">ภาค</label><input type="text" id="scheduleRegion" class="w-full mt-1 p-2 border bg-gray-100 rounded-md" readonly></div></div><div><label for="scheduleDetails" class="block text-sm font-medium">รายละเอียดงาน</label><textarea id="scheduleDetails" rows="3" class="w-full mt-1 p-2 border rounded-md"></textarea></div><div class="flex justify-end"><button type="submit" id="saveScheduleBtn" class="px-6 py-3 bg-primary text-white rounded-xl">บันทึก</button></div></form></div></div>`,activity:`<div class="fade-in"><h1 class="text-3xl font-bold text-gray-800 mb-8">Activity Log</h1><div class="bg-white rounded-2xl shadow-sm border overflow-hidden"><div class="overflow-x-auto"><table class="w-full"><thead class="bg-gray-50"><tr><th class="px-6 py-4 text-left text-xs font-medium uppercase">วัน-เวลา</th><th class="px-6 py-4 text-left text-xs font-medium uppercase">Username</th><th class="px-6 py-4 text-left text-xs font-medium uppercase">กิจกรรม</th></tr></thead><tbody id="activityTableBody" class="bg-white divide-y divide-gray-200"></tbody></table></div></div></div>`}[pageId]||''}
 function initDashboardPage(){ const headerRow=document.getElementById('header-row'); headerRow.innerHTML=['วันที่','พนักงาน','สาขา','เขต','ภาค','จัดการ'].map(c=>`<th class="p-3 text-left text-xs font-medium uppercase tracking-wider">${c}</th>`).join(''); setupDashboardFilters(); }
-function setupDashboardFilters() { const filters = { month: document.getElementById('filter-month'), date: document.getElementById('filter-date'), employee: document.getElementById('filter-employee'), branch: document.getElementById('filter-branch'), area: document.getElementById('filter-area'), region: document.getElementById('filter-region') }; filters.month.value = new Date().toISOString().slice(0, 7); const userRole = currentUser.role.toLowerCase(); if (userRole === 'admin' || userRole === 'manager') { document.getElementById('date-filter-container').style.display = 'block'; } Object.values(filters).forEach(filter => { filter.addEventListener('change', renderDashboardTable); }); document.getElementById('reset-filters-btn').addEventListener('click', () => { filters.month.value = new Date().toISOString().slice(0, 7); filters.date.value = ''; filters.employee.value = ''; filters.branch.value = ''; filters.area.value = ''; filters.region.value = ''; renderDashboardTable(); }); renderDashboardTable(); }
-function renderDashboardTable(){ const filters = { month: document.getElementById('filter-month').value, date: document.getElementById('filter-date').value, employee: document.getElementById('filter-employee').value, branch: document.getElementById('filter-branch').value, area: document.getElementById('filter-area').value, region: document.getElementById('filter-region').value }; updateCascadingFilters(filters); let filteredData = masterData.schedules; if (filters.month) { filteredData = filteredData.filter(row => row[3] && row[3].startsWith(filters.month)); } if (filters.date) { filteredData = filteredData.filter(row => row[3] === filters.date); } if (filters.region) { filteredData = filteredData.filter(row => row[10] === filters.region); } if (filters.area) { filteredData = filteredData.filter(row => row[9] === filters.area); } if (filters.branch) { filteredData = filteredData.filter(row => row[6] === filters.branch); } if (filters.employee) { filteredData = filteredData.filter(row => row[11] === filters.employee); } 
-    // Save to global variable for export
-    latestDashboardData = filteredData.sort((a, b) => new Date(b[3]) - new Date(a[3]));
-    updateStatsCards(filteredData); const tableBody = document.getElementById('dashboard-table-body'); if(filteredData.length === 0){ tableBody.innerHTML=`<tr><td colspan="6" class="p-8 text-center text-gray-500">ไม่พบข้อมูลตามเงื่อนไขที่เลือก</td></tr>`; return; } const today = new Date(); today.setHours(0, 0, 0, 0); const cutoffDate = new Date(today); cutoffDate.setDate(cutoffDate.getDate() - EDIT_DELETE_WINDOW_DAYS); const cutoffDateTime = cutoffDate.getTime(); tableBody.innerHTML = filteredData.map(row => { const [id, ts, user, date, st, et, branch, details, status, area, region, nickname] = row; let canManage = true; if (currentUser.role.toLowerCase() === 'employee') { if (!date) { canManage = false; } else { const parts = date.split('-').map(Number); const workDate = new Date(parts[0], parts[1] - 1, parts[2]); const workDateTime = workDate.getTime(); canManage = workDateTime >= cutoffDateTime; } } return `<tr><td class="p-3 text-sm">${formatDateForDisplay(date)}</td><td class="p-3 text-sm">${nickname}</td><td class="p-3 text-sm">${branch}</td><td class="p-3 text-sm">${area}</td><td class="p-3 text-sm">${region}</td><td class="p-3 text-sm text-center whitespace-nowrap space-x-2"><button onclick="openViewModal('${id}')" class="text-gray-500 hover:text-primary p-1" title="ดู"><i class="fas fa-eye"></i></button><button onclick="openEditModal('${id}')" class="text-blue-500 hover:text-blue-700 p-1 ${!canManage ? 'opacity-50 cursor-not-allowed' : ''}" ${!canManage ? 'disabled' : ''} title="แก้ไข"><i class="fas fa-pen-to-square"></i></button><button onclick="handleDelete('${id}')" class="text-red-500 hover:text-red-700 p-1 ${!canManage ? 'opacity-50 cursor-not-allowed' : ''}" ${!canManage ? 'disabled' : ''} title="ลบ"><i class="fas fa-trash-can"></i></button></td></tr>`; }).join(''); }
+function setupDashboardFilters() { const filters = { month: document.getElementById('filter-month'), date: document.getElementById('filter-date'), employee: document.getElementById('filter-employee'), branch: document.getElementById('filter-branch'), area: document.getElementById('filter-area'), region: document.getElementById('filter-region') }; filters.month.value = new Date().toISOString().slice(0, 7); const userRole = currentUser.role.toLowerCase(); if (userRole === 'admin' || userRole === 'manager') { document.getElementById('date-filter-container').style.display = 'block'; } Object.values(filters).forEach(filter => { filter.addEventListener('change', () => { currentDashboardPage = 1; renderDashboardTable(); }); }); document.getElementById('reset-filters-btn').addEventListener('click', () => { filters.month.value = new Date().toISOString().slice(0, 7); filters.date.value = ''; filters.employee.value = ''; filters.branch.value = ''; filters.area.value = ''; filters.region.value = ''; currentDashboardPage = 1; renderDashboardTable(); }); renderDashboardTable(); }
+function renderDashboardTable(){ 
+    const filters = { month: document.getElementById('filter-month').value, date: document.getElementById('filter-date').value, employee: document.getElementById('filter-employee').value, branch: document.getElementById('filter-branch').value, area: document.getElementById('filter-area').value, region: document.getElementById('filter-region').value }; 
+    updateCascadingFilters(filters); 
+    let filteredData = masterData.schedules; 
+    if (filters.month) { filteredData = filteredData.filter(row => row[3] && row[3].startsWith(filters.month)); } 
+    if (filters.date) { filteredData = filteredData.filter(row => row[3] === filters.date); } 
+    if (filters.region) { filteredData = filteredData.filter(row => row[10] === filters.region); } 
+    if (filters.area) { filteredData = filteredData.filter(row => row[9] === filters.area); } 
+    if (filters.branch) { filteredData = filteredData.filter(row => row[6] === filters.branch); } 
+    if (filters.employee) { filteredData = filteredData.filter(row => row[11] === filters.employee); } 
+    
+    // Sort and Save for export
+    filteredData.sort((a, b) => new Date(b[3]) - new Date(a[3]));
+    latestDashboardData = filteredData;
+    updateStatsCards(filteredData); 
+
+    const tableBody = document.getElementById('dashboard-table-body'); 
+    
+    if(filteredData.length === 0){ 
+        tableBody.innerHTML=`<tr><td colspan="6" class="p-8 text-center text-gray-500">ไม่พบข้อมูลตามเงื่อนไขที่เลือก</td></tr>`; 
+        document.getElementById('pagination-controls').innerHTML = '';
+        return; 
+    } 
+
+    // Pagination Logic
+    const totalItems = filteredData.length;
+    const totalPages = Math.ceil(totalItems / ITEMS_PER_PAGE);
+    if (currentDashboardPage > totalPages) currentDashboardPage = totalPages;
+    const startIndex = (currentDashboardPage - 1) * ITEMS_PER_PAGE;
+    const endIndex = Math.min(startIndex + ITEMS_PER_PAGE, totalItems);
+    const paginatedData = filteredData.slice(startIndex, endIndex);
+
+    const today = new Date(); today.setHours(0, 0, 0, 0); 
+    const cutoffDate = new Date(today); cutoffDate.setDate(cutoffDate.getDate() - EDIT_DELETE_WINDOW_DAYS); 
+    const cutoffDateTime = cutoffDate.getTime(); 
+    
+    tableBody.innerHTML = paginatedData.map(row => { 
+        const [id, ts, user, date, st, et, branch, details, status, area, region, nickname] = row; 
+        let canManage = true; 
+        if (currentUser.role.toLowerCase() === 'employee') { 
+            if (!date) { canManage = false; } 
+            else { 
+                const parts = date.split('-').map(Number); 
+                const workDate = new Date(parts[0], parts[1] - 1, parts[2]); 
+                const workDateTime = workDate.getTime(); 
+                canManage = workDateTime >= cutoffDateTime; 
+            } 
+        } 
+        return `<tr><td class="p-3 text-sm">${formatDateForDisplay(date)}</td><td class="p-3 text-sm">${nickname}</td><td class="p-3 text-sm">${branch}</td><td class="p-3 text-sm">${area}</td><td class="p-3 text-sm">${region}</td><td class="p-3 text-sm text-center whitespace-nowrap space-x-2"><button onclick="openViewModal('${id}')" class="text-gray-500 hover:text-primary p-1" title="ดู"><i class="fas fa-eye"></i></button><button onclick="openEditModal('${id}')" class="text-blue-500 hover:text-blue-700 p-1 ${!canManage ? 'opacity-50 cursor-not-allowed' : ''}" ${!canManage ? 'disabled' : ''} title="แก้ไข"><i class="fas fa-pen-to-square"></i></button><button onclick="handleDelete('${id}')" class="text-red-500 hover:text-red-700 p-1 ${!canManage ? 'opacity-50 cursor-not-allowed' : ''}" ${!canManage ? 'disabled' : ''} title="ลบ"><i class="fas fa-trash-can"></i></button></td></tr>`; 
+    }).join(''); 
+
+    // Render Pagination Controls
+    document.getElementById('pagination-controls').innerHTML = `
+        <div class="text-sm text-gray-500">แสดง ${startIndex + 1} ถึง ${endIndex} จาก ${totalItems} รายการ</div>
+        <div class="flex gap-1">
+            <button onclick="changePage(-1)" class="pagination-btn" ${currentDashboardPage === 1 ? 'disabled' : ''}><i class="fas fa-chevron-left"></i></button>
+            <span class="px-3 py-1 text-sm font-semibold">${currentDashboardPage} / ${totalPages}</span>
+            <button onclick="changePage(1)" class="pagination-btn" ${currentDashboardPage === totalPages ? 'disabled' : ''}><i class="fas fa-chevron-right"></i></button>
+        </div>
+    `;
+}
+
+function changePage(delta) {
+    currentDashboardPage += delta;
+    renderDashboardTable();
+}
 
 // Export Preview Functions
 function openExportPreview() {
@@ -432,7 +502,35 @@ function proceedToExport() {
 
 function updateCascadingFilters(currentFilters) { const selects = { employee: document.getElementById('filter-employee'), branch: document.getElementById('filter-branch'), area: document.getElementById('filter-area'), region: document.getElementById('filter-region') }; let baseData = masterData.schedules; if (currentFilters.month) baseData = baseData.filter(s => s[3] && s[3].startsWith(currentFilters.month)); if (currentFilters.date) baseData = baseData.filter(s => s[3] === currentFilters.date); const updateOptionsFor = (key, dataIndex, selectElement) => { let tempFiltered = baseData; for (const filterKey in currentFilters) { if (filterKey !== key && currentFilters[filterKey] && ['region', 'area', 'branch', 'employee'].includes(filterKey)) { const idx = { region: 10, area: 9, branch: 6, employee: 11 }[filterKey]; tempFiltered = tempFiltered.filter(s => s[idx] === currentFilters[filterKey]); } } const options = [...new Set(tempFiltered.map(s => s[dataIndex]).filter(Boolean))].sort((a,b) => (a+'').localeCompare(b+'', 'th')); populateSelect(selectElement, options, currentFilters[key]); }; updateOptionsFor('region', 10, selects.region); updateOptionsFor('area', 9, selects.area); updateOptionsFor('branch', 6, selects.branch); updateOptionsFor('employee', 11, selects.employee); }
 function populateSelect(selectElement, options, selectedValue) { const currentValue = selectElement.value; selectElement.innerHTML = '<option value="">ทั้งหมด</option>'; options.forEach(option => { selectElement.innerHTML += `<option value="${option}" ${option == currentValue && options.includes(currentValue) ? 'selected' : ''}>${option}</option>`; }); }
-function updateStatsCards(data){ const container=document.getElementById('stats-cards'); container.innerHTML = `<div class="stats-card rounded-xl shadow-md p-5 flex items-center space-x-4 bg-gradient-to-br from-blue-400 to-blue-600 text-white"><div class="bg-white/30 p-3 rounded-full"><i class="fas fa-calendar-check fa-lg"></i></div><div><p class="text-sm opacity-90">แผนงาน (ที่แสดง)</p><p class="text-2xl font-bold">${data.length}</p></div></div><div class="stats-card rounded-xl shadow-md p-5 flex items-center space-x-4 bg-gradient-to-br from-green-400 to-green-600 text-white"><div class="bg-white/30 p-3 rounded-full"><i class="fas fa-store fa-lg"></i></div><div><p class="text-sm opacity-90">จำนวนสาขา (ที่แสดง)</p><p class="text-2xl font-bold">${new Set(data.map(r=>r[6])).size}</p></div></div><div class="stats-card rounded-xl shadow-md p-5 flex items-center space-x-4 bg-gradient-to-br from-purple-400 to-purple-600 text-white"><div class="bg-white/30 p-3 rounded-full"><i class="fas fa-users fa-lg"></i></div><div><p class="text-sm opacity-90">จำนวนพนักงาน (ที่แสดง)</p><p class="text-2xl font-bold">${new Set(data.map(r=>r[11])).size}</p></div></div>`; }
+function updateStatsCards(data){ 
+    const container=document.getElementById('stats-cards'); 
+    container.innerHTML = `<div class="stats-card rounded-xl shadow-md p-5 flex items-center space-x-4 bg-gradient-to-br from-blue-400 to-blue-600 text-white"><div class="bg-white/30 p-3 rounded-full"><i class="fas fa-calendar-check fa-lg"></i></div><div><p class="text-sm opacity-90">แผนงาน</p><p class="text-2xl font-bold">${data.length}</p></div></div><div class="stats-card rounded-xl shadow-md p-5 flex items-center space-x-4 bg-gradient-to-br from-green-400 to-green-600 text-white"><div class="bg-white/30 p-3 rounded-full"><i class="fas fa-store fa-lg"></i></div><div><p class="text-sm opacity-90">สาขา</p><p class="text-2xl font-bold">${new Set(data.map(r=>r[6])).size}</p></div></div><div class="stats-card rounded-xl shadow-md p-5 flex items-center space-x-4 bg-gradient-to-br from-purple-400 to-purple-600 text-white"><div class="bg-white/30 p-3 rounded-full"><i class="fas fa-users fa-lg"></i></div><div><p class="text-sm opacity-90">พนักงาน</p><p class="text-2xl font-bold">${new Set(data.map(r=>r[11])).size}</p></div></div>`; 
+
+    // Leave Summary
+    const sickLeave = data.filter(r => r[6] === 'ลาป่วย').length;
+    const personalLeave = data.filter(r => r[6] === 'ลากิจ').length;
+    const vacationLeave = data.filter(r => r[6] === 'ลาพักร้อน').length;
+    const leaveContainer = document.getElementById('leave-summary-card');
+    
+    if (leaveContainer) {
+        leaveContainer.innerHTML = `
+            <div class="grid grid-cols-3 gap-4 mb-8">
+                <div class="bg-red-50 dark:bg-red-900/20 p-4 rounded-xl border border-red-100 dark:border-red-800 text-center">
+                    <div class="text-red-500 font-bold text-lg">${sickLeave}</div>
+                    <div class="text-xs text-red-400">ลาป่วย</div>
+                </div>
+                <div class="bg-orange-50 dark:bg-orange-900/20 p-4 rounded-xl border border-orange-100 dark:border-orange-800 text-center">
+                    <div class="text-orange-500 font-bold text-lg">${personalLeave}</div>
+                    <div class="text-xs text-orange-400">ลากิจ</div>
+                </div>
+                <div class="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-xl border border-blue-100 dark:border-blue-800 text-center">
+                    <div class="text-blue-500 font-bold text-lg">${vacationLeave}</div>
+                    <div class="text-xs text-blue-400">ลาพักร้อน</div>
+                </div>
+            </div>
+        `;
+    }
+}
 function openViewModal(id){const eventData=masterData.schedules.find(row=>row[0]===id);if(!eventData)return;const[schId,ts,user,date,st,et,branch,details,status,area,region,nickname]=eventData;showCalendarEventModal({id: schId, nickname,workDate:date,startTime:st,endTime:et,branch,area,region,details})}
 async function openEditModal(id){ 
     // ปิด Modal ปฏิทิน และ Popover
@@ -605,8 +703,74 @@ function showCalendarEventModal(props){
 }
 function initScheduleFormLogic(elements, mode = 'create') { const { period, startH, startM, endH, endM, details, area, region, branchContainer } = elements; populateHourDropdown(startH); populateMinuteDropdown(startM); populateHourDropdown(endH); populateMinuteDropdown(endM); if(mode === 'edit') { const datalist = branchContainer.querySelector('datalist'); if (datalist) datalist.innerHTML = masterData.branches.map(b=>`<option value="${b[0]}"></option>`).join(''); } const originalBranchHTML = branchContainer.innerHTML; period.addEventListener('change', (e) => { const value = e.target.value; [startH, startM, endH, endM].forEach(el => { el.disabled = false; el.required = true; }); branchContainer.innerHTML = originalBranchHTML; const newBranchInput = branchContainer.querySelector('input'); if (newBranchInput && mode === 'edit') { const datalist = branchContainer.querySelector('datalist'); if(datalist) datalist.innerHTML = masterData.branches.map(b=>`<option value="${b[0]}"></option>`).join(''); } switch(value) { case 'morning': startH.value = '08'; startM.value = '30'; endH.value = '12'; endM.value = '00'; break; case 'afternoon': startH.value = '13'; startM.value = '00'; endH.value = '17'; endM.value = '30'; break; case 'evening': startH.value = '16'; startM.value = '30'; endH.value = '18'; endM.value = '30'; break; case 'full': startH.value = '08'; startM.value = '30'; endH.value = '17'; endM.value = '30'; break; case 'leave': [startH, startM, endH, endM].forEach(el => { el.value = ''; el.disabled = true; el.required = false; }); area.value = ''; region.value = ''; const leaveSelectId = mode === 'edit' ? 'edit-leave-type' : 'schedule-leave-type'; const leaveLabel = `<label for="${leaveSelectId}" class="block text-sm font-medium">ประเภทการลา</label>`; branchContainer.innerHTML = `<div>${leaveLabel}<select id="${leaveSelectId}" class="w-full mt-1 p-2 border rounded-md" required><option value="">-- เลือกประเภท --</option><option value="ลาพักร้อน">ลาพักร้อน</option><option value="ลาป่วย">ลาป่วย</option><option value="ลากิจ">ลากิจ</option></select></div>`; const leaveSelect = document.getElementById(leaveSelectId); leaveSelect.addEventListener('change', () => { details.value = leaveSelect.value; }); break; default: [startH, startM, endH, endM].forEach(el => el.value = ''); break; } }); const branchMap=new Map(masterData.branches.map(b=>[b[0],{area:b[1],region:b[2]}])); const updateAreaRegion = (e) => { const info=branchMap.get(e.target.value); area.value = info ? info.area : ''; region.value = info ? info.region : ''; }; branchContainer.addEventListener('input', (e) => { if (e.target.matches('input[list]')) { updateAreaRegion(e); } }); }
 function initScheduleFormPage(){ const elements = { date: document.getElementById('scheduleDate'), endDate: document.getElementById('scheduleEndDate'), username: document.getElementById('scheduleUsername'), period: document.getElementById('schedulePeriod'), startH: document.getElementById('scheduleStartHour'), startM: document.getElementById('scheduleStartMinute'), endH: document.getElementById('scheduleEndHour'), endM: document.getElementById('scheduleEndMinute'), area: document.getElementById('scheduleArea'), region: document.getElementById('scheduleRegion'), details: document.getElementById('scheduleDetails'), branchContainer: document.getElementById('branch-container-wrapper') }; elements.username.value=currentUser.username; elements.date.valueAsDate=new Date; document.getElementById('branch-list').innerHTML=masterData.branches.map(b=>`<option value="${b[0]}"></option>`).join(''); initScheduleFormLogic(elements, 'create'); document.getElementById('scheduleForm').addEventListener('submit',handleSaveSchedule); elements.date.addEventListener('change', (e) => { elements.endDate.value = e.target.value; }); }
-async function handleSaveSchedule(e){e.preventDefault(); const btn=document.getElementById('saveScheduleBtn'); const startH = document.getElementById('scheduleStartHour').value, startM = document.getElementById('scheduleStartMinute').value; const endH = document.getElementById('scheduleEndHour').value, endM = document.getElementById('scheduleEndMinute').value; const startTime = (startH && startM) ? `${startH}:${startM}` : ''; const endTime = (endH && endM) ? `${endH}:${endM}` : ''; const payload={username:currentUser.username,workDate:document.getElementById('scheduleDate').value,endDate:document.getElementById('scheduleEndDate').value,startTime:startTime,endTime:endTime,branch:document.getElementById('scheduleBranch')?.value || document.getElementById('schedule-leave-type')?.value,details:document.getElementById('scheduleDetails').value,area:document.getElementById('scheduleArea').value,region:document.getElementById('scheduleRegion').value}; btn.disabled=true;btn.textContent='กำลังบันทึก...'; try{ await apiCall({action:'saveSchedule',payload}); Swal.fire({title:'สำเร็จ!',text:'บันทึกข้อมูลเรียบร้อย',icon:'success',toast:true,position:'top-end',showConfirmButton:false,timer:3000}); await refreshDataAndShowPage('dashboard'); }catch(error){ Swal.fire('ผิดพลาด!',error.message,'error'); }finally{ btn.disabled=false;btn.textContent='บันทึก'; } }
+async function handleSaveSchedule(e){
+    e.preventDefault(); 
+    const btn=document.getElementById('saveScheduleBtn'); 
+    const startH = document.getElementById('scheduleStartHour').value, startM = document.getElementById('scheduleStartMinute').value; 
+    const endH = document.getElementById('scheduleEndHour').value, endM = document.getElementById('scheduleEndMinute').value; 
+    const startTime = (startH && startM) ? `${startH}:${startM}` : ''; 
+    const endTime = (endH && endM) ? `${endH}:${endM}` : ''; 
+    
+    // --- OVERLAP VALIDATION START ---
+    const workDateVal = document.getElementById('scheduleDate').value;
+    const endDateVal = document.getElementById('scheduleEndDate').value || workDateVal;
+    
+    // Convert time to minutes for comparison
+    const timeToMin = (t) => {
+        if (!t) return -1; // Case full day or leave
+        const [h, m] = t.split(':').map(Number);
+        return h * 60 + m;
+    };
+    
+    const newStartMin = timeToMin(startTime);
+    const newEndMin = timeToMin(endTime);
+    
+    let currentDate = new Date(workDateVal);
+    const lastDate = new Date(endDateVal);
+    
+    // Loop through date range to check overlap
+    while (currentDate <= lastDate) {
+        const dateStr = currentDate.toISOString().split('T')[0];
+        
+        // Find existing schedules for this user on this date
+        const existingSchedules = masterData.schedules.filter(s => 
+            s[2] === currentUser.username && s[3] === dateStr
+        );
+        
+        for (const schedule of existingSchedules) {
+            // schedule format: [id, ts, user, date, st, et, ...]
+            // Check if existing is Leave (Full Day) or New is Leave
+            if (!startTime || !schedule[4]) {
+                 Swal.fire('เวลาซ้อนทับ!', `วันที่ ${formatDateForDisplay(dateStr)} มีการลงเวลาไว้แล้ว (วันลาหรือเต็มวัน)`, 'warning');
+                 return;
+            }
+            
+            const exStart = timeToMin(schedule[4]);
+            const exEnd = timeToMin(schedule[5]);
+            
+            // Overlap logic: (StartA < EndB) and (EndA > StartB)
+            if (newStartMin < exEnd && newEndMin > exStart) {
+                Swal.fire('เวลาซ้อนทับ!', `วันที่ ${formatDateForDisplay(dateStr)} เวลา ${startTime}-${endTime} ชนกับตารางงานที่มีอยู่ (${schedule[4]}-${schedule[5]})`, 'warning');
+                return;
+            }
+        }
+        currentDate.setDate(currentDate.getDate() + 1);
+    }
+    // --- OVERLAP VALIDATION END ---
+
+    const payload={username:currentUser.username,workDate:workDateVal,endDate:endDateVal,startTime:startTime,endTime:endTime,branch:document.getElementById('scheduleBranch')?.value || document.getElementById('schedule-leave-type')?.value,details:document.getElementById('scheduleDetails').value,area:document.getElementById('scheduleArea').value,region:document.getElementById('scheduleRegion').value}; 
+    btn.disabled=true;btn.textContent='กำลังบันทึก...'; 
+    try{ 
+        await apiCall({action:'saveSchedule',payload}); 
+        Swal.fire({title:'สำเร็จ!',text:'บันทึกข้อมูลเรียบร้อย',icon:'success',toast:true,position:'top-end',showConfirmButton:false,timer:3000}); 
+        await refreshDataAndShowPage('dashboard'); 
+    }catch(error){ 
+        Swal.fire('ผิดพลาด!',error.message,'error'); 
+    }finally{ 
+        btn.disabled=false;btn.textContent='บันทึก'; 
+    } 
+}
 async function loadActivityLogs(){const tableBody=document.getElementById('activityTableBody');tableBody.innerHTML=`<tr><td colspan="3" class="p-6 text-center text-gray-500"><i class="fas fa-spinner fa-spin mr-2"></i>Loading...</td></tr>`;try{const response=await apiCall({action:'getActivityLogs'});tableBody.innerHTML=response.data.length===0?`<tr><td colspan="3" class="p-6 text-center text-gray-500">ไม่พบข้อมูล</td></tr>`:response.data.map(([ts,user,act])=>`<tr><td class="p-3 text-sm">${ts}</td><td class="p-3 text-sm">${user}</td><td class="p-3 text-sm">${act}</td></tr>`).join('')}catch(error){tableBody.innerHTML=`<tr><td colspan="3" class="p-6 text-center text-red-500">โหลดข้อมูลล้มเหลว</td></tr>`}}
 </script>
 </body>
-</html>
+</html>--- END OF FILE index.html ---
