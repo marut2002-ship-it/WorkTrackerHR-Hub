@@ -580,7 +580,10 @@ function initCalendarPage(){
         views: {
             listWeek: { buttonText: 'แบบรายการ' },
             dayGridMonth: { buttonText: 'แบบเดือน' },
-            dayGridWeek: { buttonText: 'แบบสัปดาห์' }
+            dayGridWeek: { 
+                buttonText: 'แบบสัปดาห์',
+                dayMaxEvents: false // <--- Disable event limit for week view (Show all events vertically)
+            }
         },
         buttonText: {
             today: 'วันนี้',
@@ -773,4 +776,4 @@ async function handleSaveSchedule(e){
 async function loadActivityLogs(){const tableBody=document.getElementById('activityTableBody');tableBody.innerHTML=`<tr><td colspan="3" class="p-6 text-center text-gray-500"><i class="fas fa-spinner fa-spin mr-2"></i>Loading...</td></tr>`;try{const response=await apiCall({action:'getActivityLogs'});tableBody.innerHTML=response.data.length===0?`<tr><td colspan="3" class="p-6 text-center text-gray-500">ไม่พบข้อมูล</td></tr>`:response.data.map(([ts,user,act])=>`<tr><td class="p-3 text-sm">${ts}</td><td class="p-3 text-sm">${user}</td><td class="p-3 text-sm">${act}</td></tr>`).join('')}catch(error){tableBody.innerHTML=`<tr><td colspan="3" class="p-6 text-center text-red-500">โหลดข้อมูลล้มเหลว</td></tr>`}}
 </script>
 </body>
-</html>--- END OF FILE index.html ---
+</html>
